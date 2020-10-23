@@ -1,0 +1,19 @@
+{
+  "name": "telnet",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "asterisk-ami": "^0.1.0",
+    "asterisk-manager": "^0.1.16",
+    "co": "^4.6.0",
+    "express": "^4.17.1",
+    "sucrase": "^3.16.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  }
+}
