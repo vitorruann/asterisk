@@ -7,7 +7,6 @@ class actionsController {
 
     async actionExten(req, res) {
         let responsee;
-        console.log('1');
    
         ami.connect();
         // ami.action({
