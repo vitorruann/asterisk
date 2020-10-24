@@ -24,7 +24,6 @@ class actionsController {
         ami.action({
             'action': 'Logoff',
         }, function(err, ress) {
-            console.log('6');
             responsee = ress
         });
         
