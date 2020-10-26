@@ -10,6 +10,7 @@
     "asterisk-ami": "^0.1.0",
     "asterisk-manager": "^0.1.16",
     "co": "^4.6.0",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "sucrase": "^3.16.0"
   },
