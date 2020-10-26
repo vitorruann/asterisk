@@ -1,64 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input } from '@rocketseat/unform';
 
 import api from '../../services/api';
 // import { Container } from './styles';
+let control = 'off';
 
-function Status() {
+function Status({ history }) {
   const [extension, setExtension] = useState([]);
-
-  // useEffect(() => {
-  //   async function loadExtensions() {
-  //     const response = await api.get('/extensionStatus', {
-  //       params: {
-  //         extension: '2000',
-  //         IPPabx: '192.168.0.21',
-  //         port: 5038,
-  //         user: 'admin',
-  //         password: '171017'
-  //       }
-  //     });
-
-  //     if (response.data.status === '-1') {
-  //       response.data.status = 'Ramal não encontrado';
-  //     }
-      
-  //     setExtension(response.data);
-  //   }
-
-  //   loadExtensions();
-  // },[]);
-
+  let timer;
+  
   async function handleSubmit(data) {
-    const response = await api.get('/extensionStatus', {
-      params: {
-        extension: data.extension,
-        IPPabx: data.IPPabx,
-        port: data.port,
-        user: data.user,
-        password: data.password
-      }
-    });
 
-    if (response.data.status === '-1') {
-      response.data.status = 'Ramal não encontrado';
+    timer = setInterval(async () => {
+      const response = await api.get('/extensionStatus', {
+        params: {
+          extension: data.extension,
+          IPPabx: history.location.state.IPPabx,
+          port: history.location.state.port,
+          user: history.location.state.user,
+          password: history.location.state.password
+        }
+      });
+  
+      if (response.data.status === '-1') {
+        response.data.status = 'Ramal não encontrado';
+      } else if (response.data.status === '0') {
+        response.data.status = 'Ramal livre';
+      } else if (response.data.status === '1') {
+        response.data.status = 'Ramal em uso';
+      } else if (response.data.status === '2') {
+        response.data.status = 'Ramal ocuapdo';
+      } else if (response.data.status === '4') {
+        response.data.status = 'Ramal em indisponível';
+      } else if (response.data.status === '8') {
+        response.data.status = 'Ramal ringando';
+      } else if (response.data.status === '16') {
+        response.data.status = 'Ramal em espera';
+        
+      }
+      console.log('de novo')
+      setExtension(response.data);
+
+      console.log(control === 'b' ? true : false);
+      console.log(control)
+
+
+      if (control === 'off') {
+        clearInterval(timer);
+      }
+
+    }, 5000);
+
+  };
+
+
+  function handleStop() {
+    console.log('Stop!!')
+    if (control === 'a') {
+      control = 'b';
+    } else {
+
     }
-    
-    setExtension(response.data);
-  }
+    console.log(control)
+
+    console.log(control === 'b' ? true : false);
+  };
+
+
+  // const timer = setInterval(handleTest, time);
+
+  // function handleTest() {
+  //   console.log('a')
+  // }
 
   return (
     <div>
       <div>
         <Form onSubmit={handleSubmit}>
-        <Input name="IPPabx" type="text" placeholder="Dígite o IP do PABX"/>
-        <Input name="port" type="text" placeholder="Dígite a porta do Maneger"/>
-        <Input name="user" type="text" placeholder="Dígite o usuário de acesso"/>
-        <Input name="password" type="password" placeholder="Dígite a senha de acesso"/>
-
-        <Input name="extension" type="text" placeholder="Dígite o número do ramal"/>
-        <button type="submit">Verificar</button>
-      </Form>
+          <label>Dígite o número do ramal</label>
+          <br />
+          <Input name="extension" type="text" placeholder="Dígite o número do ramal"/>
+          <br />
+          
+          <button type="submit">Iniciar</button>
+          <button type="button" onClick={handleStop}>Parar</button>
+        </Form>
       </div>
       
       <div>
@@ -133,3 +159,26 @@ export default Status;
 //     });
 //     break;
 //   }
+
+  // useEffect(() => {
+  //   async function loadExtensions() {
+  //     console.log(history.location.state);
+  //     const response = await api.get('/extensionStatus', {
+  //       params: {
+  //         extension: '5017',
+  //         IPPabx: '10.1.43.12',
+  //         port: 5030,
+  //         user: 'admin',
+  //         password: 'ippbx'
+  //       }
+  //     });
+
+  //     if (response.data.status === '-1') {
+  //       response.data.status = 'Ramal não encontrado';
+  //     }
+      
+  //     setExtension(response.data);
+  //   }
+
+  //   loadExtensions();
+  // },[]);
