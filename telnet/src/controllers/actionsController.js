@@ -1,7 +1,19 @@
 import amiI from 'asterisk-manager';
+import fs from 'fs';
 
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
+    async login(req, res) {
+        const { IPPabx, port, user, password } = req.query;
+        const ami = new amiI(port, IPPabx, user, password);
+        ami.keepConnected();
+
+    }
+
+    async logoff(req, res) {
+        
+    }
+
     async actionExtenStatus(req, res) {
         const { extension, IPPabx, port, user, password } = req.query;
         console.log(req.query);
@@ -23,11 +35,75 @@ class actionsController {
 
 
         setTimeout(() => {
+            ami.disconnect();
 
             return res.json(responsee)
         }, 100);
     }
+
+    async actionSipPeers(req, res) {
+        const { IPPabx, port, user, password } = req.query;
+        console.log(req.query);
+        const allExtension = [];
+
+        const ami = new amiI(port, IPPabx, user, password)
+
+        ami.keepConnected();
+
+        ami.on('managerevent', function(evt) {
+            console.log(evt);
+            if (evt.event === 'PeerEntry') {
+                allExtension.push({
+                    exten: evt.objectname,
+                    host: evt.ipaddress,
+                    portExten: evt.ipport
+                }) 
+            }
+        });
+        
+        ami.connect();
+        ami.action({
+            'action': 'SipPeers',
+            'actionid': '2',
+        }, function(err, ress) {
+        });
+
+
+        setTimeout(() => {
+            ami.disconnect();
+
+            return res.json(allExtension)
+        }, 200);
+    }
+
+    async actionRegistered(req, res) {
+        const { IPPabx, port, user, password } = req.query;
+        console.log(req.query);
+        const registeredExtension = [];
+
+        const ami = new amiI(port, IPPabx, user, password);
+
+        ami.keepConnected();
+
+        ami.on('managerevent', function(evt) {
+            console.log(evt);
+            if (evt.event === 'PeerStatus') {
+                registeredExtension.push({
+                    exten: evt.peer,
+                    registered: evt.peerstatus
+                })
+            }
+        });
+        
+        ami.connect();
+
+        setTimeout(() => {
+
+            return res.json(registeredExtension)
+        }, 30000);
+    }
 }
+
 
 export default new actionsController();
 

@@ -3,18 +3,51 @@ import { Form, Input } from '@rocketseat/unform';
 
 import api from '../../services/api';
 // import { Container } from './styles';
-let control = 'off';
+let control = 'on';
 
 function Status({ history }) {
-  const [extension, setExtension] = useState([]);
+  const [allExtension, setAllExtension] = useState([]);
+  const [finalExtension, setFinalExtension] = useState([]);
+  const extension = [];
   let timer;
   
-  async function handleSubmit(data) {
+  useEffect(() => {
+    async function loadAllExtension() {
+      const response = await api.get('/sipPeers', {
+        params: {
+          IPPabx: history.location.state.IPPabx,
+          port: history.location.state.port,
+          user: history.location.state.user,
+          password: history.location.state.password
+        }
+      });
+      console.log(response)
+      setAllExtension(response.data);
+    }
 
-    timer = setInterval(async () => {
+    loadAllExtension();
+  },[finalExtension]);
+
+
+  async function handleSubmit(data) {
+    console.log(finalExtension)
+  };
+
+
+  async function handleStop() {
+    console.log('Stop!!');
+    if (control === 'off') {
+      control = 'on';
+    } else {
+      control = 'off';
+    }
+    timer = setInterval(() => {
+
+    allExtension.map(async e => {
+      console.log(e)
       const response = await api.get('/extensionStatus', {
         params: {
-          extension: data.extension,
+          extension: e.exten,
           IPPabx: history.location.state.IPPabx,
           port: history.location.state.port,
           user: history.location.state.user,
@@ -31,18 +64,21 @@ function Status({ history }) {
       } else if (response.data.status === '2') {
         response.data.status = 'Ramal ocuapdo';
       } else if (response.data.status === '4') {
-        response.data.status = 'Ramal em indisponível';
+        response.data.status = 'Ramal indisponível';
       } else if (response.data.status === '8') {
         response.data.status = 'Ramal ringando';
       } else if (response.data.status === '16') {
         response.data.status = 'Ramal em espera';
-        
       }
-      console.log('de novo')
-      setExtension(response.data);
 
-      console.log(control === 'b' ? true : false);
+      console.log('de novo')
+      // setExtension(response.data);
+      extension.push({
+        exten: response.data.exten,
+        status: response.data.status
+      });
       console.log(control)
+    });
 
 
       if (control === 'off') {
@@ -50,20 +86,8 @@ function Status({ history }) {
       }
 
     }, 5000);
-
-  };
-
-
-  function handleStop() {
-    console.log('Stop!!')
-    if (control === 'a') {
-      control = 'b';
-    } else {
-
-    }
     console.log(control)
-
-    console.log(control === 'b' ? true : false);
+    setFinalExtension(extension)
   };
 
 
@@ -90,10 +114,25 @@ function Status({ history }) {
       <div>
         <h1>Status dos ramais</h1>
 
-        <label>Ramal: {extension.exten}</label>
-        <br/>
-        <label>Status: {extension.status}</label>
+        {finalExtension.map(fe =>(
+          <div>
+            <label>Extensão: {fe.exten}</label>
+            <br/>
+            <label>Status: {fe.status}</label>
+          </div>
+        ))}
 
+      </div>
+
+      <div>
+        <h1>Todas extensões</h1>
+
+        {allExtension.map(e => (
+          <div>
+            <label>Rm: {e.exten} IP: {e.host} Porta: {e.portExten}</label>
+          </div>
+        ))}
+        <br/>
       </div>
     </div>
 
@@ -182,3 +221,43 @@ export default Status;
 
   //   loadExtensions();
   // },[]);
+
+
+  // timer = setInterval(async () => {
+  //   const response = await api.get('/extensionStatus', {
+  //     params: {
+  //       extension: data.extension,
+  //       IPPabx: history.location.state.IPPabx,
+  //       port: history.location.state.port,
+  //       user: history.location.state.user,
+  //       password: history.location.state.password
+  //     }
+  //   });
+
+  //   if (response.data.status === '-1') {
+  //     response.data.status = 'Ramal não encontrado';
+  //   } else if (response.data.status === '0') {
+  //     response.data.status = 'Ramal livre';
+  //   } else if (response.data.status === '1') {
+  //     response.data.status = 'Ramal em uso';
+  //   } else if (response.data.status === '2') {
+  //     response.data.status = 'Ramal ocuapdo';
+  //   } else if (response.data.status === '4') {
+  //     response.data.status = 'Ramal indisponível';
+  //   } else if (response.data.status === '8') {
+  //     response.data.status = 'Ramal ringando';
+  //   } else if (response.data.status === '16') {
+  //     response.data.status = 'Ramal em espera';
+  //   }
+
+  //   console.log('de novo')
+  //   setExtension(response.data);
+
+  //   console.log(control)
+
+
+  //   if (control === 'off') {
+  //     clearInterval(timer);
+  //   }
+
+  // }, 5000);
