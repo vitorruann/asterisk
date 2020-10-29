@@ -1,5 +1,4 @@
 import amiI from 'asterisk-manager';
-import fs from 'fs';
 
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
@@ -16,38 +15,50 @@ class actionsController {
 
     async actionExtenStatus(req, res) {
         const { extension, IPPabx, port, user, password } = req.query;
-        console.log(req.query);
-        let responsee;
+        console.log(req.query.extension)
+        const data = [];
+        const response = [];
         const ami = new amiI(port, IPPabx, user, password);
 
         ami.keepConnected();
-     
-        ami.connect();
-        ami.action({
-            'action': 'ExtensionState',
-            'context': 'ippbx-from-extensions',
-            'exten': extension,
-            'actionid': '1',
-        }, function(err, ress) {
-            console.log(ress);
-            responsee = ress
-         });
 
+        ami.connect();
+
+        extension.map(ex =>{
+            data.push(ex.match(/[0-9]{1,15}/g)); 
+        });
+
+        data.map(exten => {
+            
+            if (exten) {
+                console.log(exten)
+
+                ami.action({
+                    'action': 'ExtensionState',
+                    'context': 'ippbx-from-extensions',
+                    'exten': exten,
+                    'actionid': '1',
+                }, function(err, ress) {
+                    console.log(ress);
+                    response.push(ress)
+                });
+            }
+            
+        });
+        
 
         setTimeout(() => {
             ami.disconnect();
 
-            return res.json(responsee)
-        }, 100);
+            return res.json(response)
+        }, 300);
     }
 
     async actionSipPeers(req, res) {
         const { IPPabx, port, user, password } = req.query;
         console.log(req.query);
         const allExtension = [];
-
         const ami = new amiI(port, IPPabx, user, password)
-
         ami.keepConnected();
 
         ami.on('managerevent', function(evt) {
@@ -59,6 +70,11 @@ class actionsController {
                     portExten: evt.ipport
                 }) 
             }
+            if (evt.event === 'PeerlistComplete') {
+                allExtension.push({
+                    quantity: evt.listitems
+                });
+            }
         });
         
         ami.connect();
@@ -67,7 +83,6 @@ class actionsController {
             'actionid': '2',
         }, function(err, ress) {
         });
-
 
         setTimeout(() => {
             ami.disconnect();
@@ -165,3 +180,29 @@ export default new actionsController();
     //             return res.json(responsee)
     //             }, 1500);
     //     }
+
+    // const { extension, IPPabx, port, user, password } = req.query;
+    //     console.log(req.query);
+    //     let responsee;
+    //     const ami = new amiI(port, IPPabx, user, password);
+
+    //     ami.keepConnected();
+        
+    //     ami.connect();
+    //     ami.action({
+    //         'action': 'ExtensionState',
+    //         'context': 'ippbx-from-extensions',
+    //         'exten': extension,
+    //         'actionid': '1',
+    //     }, function(err, ress) {
+    //         console.log(ress);
+    //         responsee = ress
+    //      });
+
+
+    //     setTimeout(() => {
+    //         ami.disconnect();
+
+    //         return res.json(responsee)
+    //     }, 100);
+    // }

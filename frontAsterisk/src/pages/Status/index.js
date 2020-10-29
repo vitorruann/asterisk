@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input } from '@rocketseat/unform';
 
 import api from '../../services/api';
 // import { Container } from './styles';
-let control = 'on';
+let control = 'off';
 
 function Status({ history }) {
   const [allExtension, setAllExtension] = useState([]);
   const [finalExtension, setFinalExtension] = useState([]);
-  const extension = [];
+  const [consulta, setConsulta] = useState([]);
+  const backend = [];
+
   let timer;
   
-  useEffect(() => {
+  useEffect(() =>{
     async function loadAllExtension() {
+
       const response = await api.get('/sipPeers', {
         params: {
           IPPabx: history.location.state.IPPabx,
@@ -21,101 +23,99 @@ function Status({ history }) {
           password: history.location.state.password
         }
       });
-      console.log(response)
+
       setAllExtension(response.data);
-    }
+      
 
+    }       
     loadAllExtension();
-  },[finalExtension]);
 
-
-  async function handleSubmit(data) {
-    console.log(finalExtension)
-  };
-
-
-  async function handleStop() {
-    console.log('Stop!!');
-    if (control === 'off') {
-      control = 'on';
-    } else {
-      control = 'off';
-    }
-    timer = setInterval(() => {
-
-    allExtension.map(async e => {
-      console.log(e)
+  },[
+    history.location.state.IPPabx, 
+    history.location.state.port, 
+    history.location.state.user, 
+    history.location.state.password
+  ]);
+    
+  async function reloadState() {
+    timer = setInterval(async () => {
       const response = await api.get('/extensionStatus', {
         params: {
-          extension: e.exten,
+          extension: consulta,
           IPPabx: history.location.state.IPPabx,
           port: history.location.state.port,
           user: history.location.state.user,
           password: history.location.state.password
         }
       });
-  
-      if (response.data.status === '-1') {
-        response.data.status = 'Ramal não encontrado';
-      } else if (response.data.status === '0') {
-        response.data.status = 'Ramal livre';
-      } else if (response.data.status === '1') {
-        response.data.status = 'Ramal em uso';
-      } else if (response.data.status === '2') {
-        response.data.status = 'Ramal ocuapdo';
-      } else if (response.data.status === '4') {
-        response.data.status = 'Ramal indisponível';
-      } else if (response.data.status === '8') {
-        response.data.status = 'Ramal ringando';
-      } else if (response.data.status === '16') {
-        response.data.status = 'Ramal em espera';
-      }
 
-      console.log('de novo')
-      // setExtension(response.data);
-      extension.push({
-        exten: response.data.exten,
-        status: response.data.status
+      response.data.map(re => {
+        if (re.status === '-1') {
+          re.status = 'Ramal não encontrado';
+        } else if (re.status === '0') {
+          re.status = 'Ramal livre';
+        } else if (re.status === '1') {
+          re.status = 'Ramal em uso';
+        } else if (re.status === '2') {
+          re.status = 'Ramal ocuapdo';
+        } else if (re.status === '4') {
+          re.status = 'Ramal indisponível';
+        } else if (re.status === '8') {
+          re.status = 'Ramal ringando';
+        } else if (re.status === '16') {
+          re.status = 'Ramal em espera';
+        }
+        return response.data
       });
-      console.log(control)
-    });
-
+      setFinalExtension(response.data);
 
       if (control === 'off') {
         clearInterval(timer);
       }
-
     }, 5000);
-    console.log(control)
-    setFinalExtension(extension)
+  };
+
+  async function handleStartStop() {
+    handleSubmit();
+    if (control === 'off') {
+      control = 'on';
+    } else {
+      control = 'off';
+    }
+
+    reloadState();
   };
 
 
-  // const timer = setInterval(handleTest, time);
-
-  // function handleTest() {
-  //   console.log('a')
-  // }
+  function handleSubmit() {
+    allExtension.map(e => {
+      if (e.exten) {
+        backend.push({
+          exten: e.exten
+        })  
+      }
+      return backend;
+    });
+    setConsulta(backend);
+    setFinalExtension(backend);
+    console.log(finalExtension)
+  };
 
   return (
     <div>
       <div>
-        <Form onSubmit={handleSubmit}>
-          <label>Dígite o número do ramal</label>
-          <br />
-          <Input name="extension" type="text" placeholder="Dígite o número do ramal"/>
+          <label>Monitoramento Extensões</label>
           <br />
           
-          <button type="submit">Iniciar</button>
-          <button type="button" onClick={handleStop}>Parar</button>
-        </Form>
+          <button type="button" onClick={handleSubmit}>Buscar extensões</button>
+          <button type="button" onClick={handleStartStop}>{control === "on" ? 'Parar' : 'Iniciar'}</button>
       </div>
       
       <div>
         <h1>Status dos ramais</h1>
 
         {finalExtension.map(fe =>(
-          <div>
+          <div key={fe.actionid}>
             <label>Extensão: {fe.exten}</label>
             <br/>
             <label>Status: {fe.status}</label>
@@ -128,7 +128,7 @@ function Status({ history }) {
         <h1>Todas extensões</h1>
 
         {allExtension.map(e => (
-          <div>
+          <div key={e.exten}>
             <label>Rm: {e.exten} IP: {e.host} Porta: {e.portExten}</label>
           </div>
         ))}
