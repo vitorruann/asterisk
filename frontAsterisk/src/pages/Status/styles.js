@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 
 export const Container = styled.div`
-  background-color: #444444;
+  background: linear-gradient(-90deg, #aaa, #777);
   height: 100%;
 `;
 
@@ -24,7 +24,7 @@ export const StatusExten = styled(PerfectScrollbar)`
   overflow: hidden;
   height: 700px;
   margin-right: 10px;
-  background: #eeee;
+  background: transparent;
   padding-bottom:10px;
   border-radius: 4px;
   text-align: center;
@@ -99,7 +99,7 @@ export const InfoExten = styled(PerfectScrollbar)`
   overflow: hidden;
   max-height: 700px;
   margin-left: 10px;
-  background: #eeee;
+  background: transparent;
   padding-bottom:10px;
   border-radius: 4px;
   text-align: center;

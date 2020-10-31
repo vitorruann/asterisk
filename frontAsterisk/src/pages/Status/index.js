@@ -110,7 +110,6 @@ function Status({ history }) {
     <Container class="container">
       <Header>
           <h1>Mesa operadora</h1>
-          <br />
           
           
       </Header>
