@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 
 import api from '../../services/api';
-// import { Container } from './styles';
+import { Container, Header, StatusExten, BoxStatus, InfoExten, InfoBox } from './styles';
+
+import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline} from 'react-icons/md';
+
 let control = 'off';
+let buscarExten = 'off';
 
 function Status({ history }) {
   const [allExtension, setAllExtension] = useState([]);
@@ -25,11 +29,10 @@ function Status({ history }) {
       });
 
       setAllExtension(response.data);
-      
+    }      
 
-    }       
     loadAllExtension();
-
+    // handleSubmit();
   },[
     history.location.state.IPPabx, 
     history.location.state.port, 
@@ -76,7 +79,6 @@ function Status({ history }) {
   };
 
   async function handleStartStop() {
-    handleSubmit();
     if (control === 'off') {
       control = 'on';
     } else {
@@ -87,7 +89,7 @@ function Status({ history }) {
   };
 
 
-  function handleSubmit() {
+  async function handleSubmit() {
     allExtension.map(e => {
       if (e.exten) {
         backend.push({
@@ -98,44 +100,64 @@ function Status({ history }) {
     });
     setConsulta(backend);
     setFinalExtension(backend);
-    console.log(finalExtension)
+    console.log(allExtension);
+    console.log(finalExtension);
+    console.log(consulta);
+    buscarExten = 'on';
   };
 
   return (
-    <div>
-      <div>
-          <label>Monitoramento Extensões</label>
+    <Container class="container">
+      <Header>
+          <h1>Mesa operadora</h1>
           <br />
           
-          <button type="button" onClick={handleSubmit}>Buscar extensões</button>
-          <button type="button" onClick={handleStartStop}>{control === "on" ? 'Parar' : 'Iniciar'}</button>
+          
+      </Header>
+
+      <div class="row">
+        <div class="col-3">
+          <InfoExten >
+            <h1>Todas extensões</h1>
+            <ul>
+              {allExtension.map(e => (
+                <InfoBox key={e.exten}>
+                  <strong>{e.exten}</strong>
+                  <span>{e.host}</span>
+                  <span>Porta: {e.portExten}</span>
+                </InfoBox>
+              ))}
+            </ul>
+          </InfoExten>
+        </div>
+
+        <div class="col-9">
+          <StatusExten>
+            <h1>Status dos ramais</h1>
+            <ul>  
+              {finalExtension.map(fe =>(
+                <BoxStatus key={fe.actionid} status={fe.status} >
+                  <label>{fe.exten}</label>
+                  <label>{fe.status}</label>
+                </BoxStatus>
+              ))}
+            </ul>
+            <button class="bt1" type="button" onClick={handleSubmit}><MdRefresh size={30} color="#000"/></button>
+            <button 
+                type="button" 
+                onClick={handleStartStop} 
+                disabled={buscarExten === 'off' ? true : false 
+              }>
+              {control === "on" ? 
+                <MdPauseCircleOutline size={30} color="#000"/> : 
+                <MdPlayCircleOutline size={30} color={buscarExten === 'off' ? '#ccc' : '#000' 
+                }/>
+              }
+            </button>
+          </StatusExten>
+        </div>
       </div>
-      
-      <div>
-        <h1>Status dos ramais</h1>
-
-        {finalExtension.map(fe =>(
-          <div key={fe.actionid}>
-            <label>Extensão: {fe.exten}</label>
-            <br/>
-            <label>Status: {fe.status}</label>
-          </div>
-        ))}
-
-      </div>
-
-      <div>
-        <h1>Todas extensões</h1>
-
-        {allExtension.map(e => (
-          <div key={e.exten}>
-            <label>Rm: {e.exten} IP: {e.host} Porta: {e.portExten}</label>
-          </div>
-        ))}
-        <br/>
-      </div>
-    </div>
-
+    </Container>
   );
 }
 

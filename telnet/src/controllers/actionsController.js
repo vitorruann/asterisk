@@ -35,7 +35,7 @@ class actionsController {
 
                 ami.action({
                     'action': 'ExtensionState',
-                    'context': 'ippbx-from-extensions',
+                    'context': 'from-internal',
                     'exten': exten,
                     'actionid': '1',
                 }, function(err, ress) {
