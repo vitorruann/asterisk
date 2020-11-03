@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 
 import api from '../../services/api';
 import { Container, Header, StatusExten, BoxStatus, InfoExten, InfoBox } from './styles';
+import IconTele from '../../assets/telefonista.svg'
 
-import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline} from 'react-icons/md';
+import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdSettingsPhone } from 'react-icons/md';
 
 let control = 'off';
-let buscarExten = 'off';
+let findExten = 'off';
 
 function Status({ history }) {
   const [allExtension, setAllExtension] = useState([]);
   const [finalExtension, setFinalExtension] = useState([]);
+  const [filterExtension, setFilterExtension] = useState([]);
   const [consulta, setConsulta] = useState([]);
   const backend = [];
 
@@ -29,22 +31,74 @@ function Status({ history }) {
       });
 
       setAllExtension(response.data);
+
+      response.data.map(data => {
+        if (data.exten) {
+          backend.push({
+            exten: data.exten
+          })  
+        }
+        return backend;
+      });
+
+      setConsulta(backend)
     }      
 
     loadAllExtension();
-    // handleSubmit();
   },[
     history.location.state.IPPabx, 
     history.location.state.port, 
     history.location.state.user, 
-    history.location.state.password
+    history.location.state.password,
   ]);
+
+  async function handleSubmit() {
+    teste();
+    findExten = 'on';
+  };
+  
+  async function teste() {
+    console.log(consulta)
+    const response = await api.get('/registered', {
+      params: {
+        allExtension: consulta,
+        IPPabx: history.location.state.IPPabx,
+        port: history.location.state.port,
+        user: history.location.state.user,
+        password: history.location.state.password
+      }
+    });
     
+    response.data.map(data => {
+      if (data.exten) {
+        backend.push({
+          exten: data.exten
+        })  
+      }
+      return backend;
+    });
+    setFilterExtension(backend);
+    setFinalExtension(response.data)
+    console.log(response.data)
+  };
+
+
+  async function handleStartStop() {
+    if (control === 'off') {
+      control = 'on';
+    } else {
+      control = 'off';
+    }
+    
+    reloadState();
+  };
+
   async function reloadState() {
     timer = setInterval(async () => {
+
       const response = await api.get('/extensionStatus', {
         params: {
-          extension: consulta,
+          extension: filterExtension,
           IPPabx: history.location.state.IPPabx,
           port: history.location.state.port,
           user: history.location.state.user,
@@ -70,6 +124,7 @@ function Status({ history }) {
         }
         return response.data
       });
+      
       setFinalExtension(response.data);
 
       if (control === 'off') {
@@ -78,46 +133,25 @@ function Status({ history }) {
     }, 5000);
   };
 
-  async function handleStartStop() {
-    if (control === 'off') {
-      control = 'on';
-    } else {
-      control = 'off';
-    }
-
-    reloadState();
-  };
-
-
-  async function handleSubmit() {
-    allExtension.map(e => {
-      if (e.exten) {
-        backend.push({
-          exten: e.exten
-        })  
-      }
-      return backend;
-    });
-    setConsulta(backend);
-    setFinalExtension(backend);
-    console.log(allExtension);
-    console.log(finalExtension);
-    console.log(consulta);
-    buscarExten = 'on';
-  };
 
   return (
     <Container class="container">
       <Header>
-          <h1>Mesa operadora</h1>
-          
-          
+          <img src={IconTele} alt="" srcset=""/>
+          <div>
+            <h2>Mesa operadora</h2>
+          </div>
       </Header>
 
       <div class="row">
         <div class="col-3">
+
+          <div class="Titulos">
+            <MdSettingsPhone size={30} />
+            <h5>Todas extensões</h5>
+          </div>  
+
           <InfoExten >
-            <h1>Todas extensões</h1>
             <ul>
               {allExtension.map(e => (
                 <InfoBox key={e.exten}>
@@ -131,13 +165,17 @@ function Status({ history }) {
         </div>
 
         <div class="col-9">
+          <div class="Titulos">
+            <MdPhone size={30} color="#000" />
+            <h5>Status dos ramais</h5>
+          </div>
           <StatusExten>
-            <h1>Status dos ramais</h1>
             <ul>  
               {finalExtension.map(fe =>(
                 <BoxStatus key={fe.actionid} status={fe.status} >
                   <label>{fe.exten}</label>
                   <label>{fe.status}</label>
+                  <label>{fe.callID}</label>
                 </BoxStatus>
               ))}
             </ul>
@@ -145,11 +183,11 @@ function Status({ history }) {
             <button 
                 type="button" 
                 onClick={handleStartStop} 
-                disabled={buscarExten === 'off' ? true : false 
+                disabled={findExten === 'off' ? true : false 
               }>
               {control === "on" ? 
                 <MdPauseCircleOutline size={30} color="#000"/> : 
-                <MdPlayCircleOutline size={30} color={buscarExten === 'off' ? '#ccc' : '#000' 
+                <MdPlayCircleOutline size={30} color={findExten === 'off' ? '#ccc' : '#000' 
                 }/>
               }
             </button>

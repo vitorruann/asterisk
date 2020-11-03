@@ -5,18 +5,46 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 export const Container = styled.div`
   background: linear-gradient(-90deg, #aaa, #777);
   height: 100%;
+
+  .Titulos {
+    display: flex;
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #ddd;
+    border-radius: 4px;
+    max-height: 50px;
+  }
+
+  h5 {
+    padding-left: 10px;
+    font-weight: bold;
+  }
 `;
 
 export const Header = styled.div`
   margin-bottom: 60px;
   padding-top: 10px;
+  background-color: #ddd;
+  display: flex;
+  justify-content: flex-start;
 
-  h1 {
-    padding-top: 10px;
-    font-size: 40px;
-    font-weight: bold;
+  img {
+    margin-left: 20px;
+    width: 40px;
+    height: 40px;
+    background: #ddd;
+    color: #000;
+  }
+
+  div {
+    width: 100%;
+    align-items: center;
     text-align: center;
-    color: #fff;
+  }
+
+  h2 {
+    margin-left: 20px;
+    font-weight: bold;
   }
 `;
 
@@ -29,24 +57,15 @@ export const StatusExten = styled(PerfectScrollbar)`
   border-radius: 4px;
   text-align: center;
 
-  h1 {
-    padding-top: 10px;
-    font-size: 30px;
-    font-weight: bold;
-    text-align: center;
-  }
+
 
   ul {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     grid-gap: 15px;
     margin-top: 30px;
     list-style: none;
   }
-
-  
-
-  
 
   button {
     position: absolute;
@@ -103,14 +122,6 @@ export const InfoExten = styled(PerfectScrollbar)`
   padding-bottom:10px;
   border-radius: 4px;
   text-align: center;
-
-
-  h1 {
-    padding-top: 10px;
-    text-align: center;
-    font-size: 30px;
-    font-weight: bold;
-  }
 
   ul {
       display: grid;
