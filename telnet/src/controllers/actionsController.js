@@ -25,7 +25,9 @@ class actionsController {
         ami.connect();
 
         extension.map(ex =>{
-            data.push(ex.match(/[0-9]{1,15}/g)); 
+            ex = ex.toString().replace('exten', "").replace('"', "").replace('"', "").replace(':', "")
+            .replace('"', "").replace('"', "").replace('{', "").replace('}', "")
+            data.push(ex.match(/\S{1,20}/g)); 
         });
 
         data.map(exten => {
@@ -35,7 +37,7 @@ class actionsController {
 
                 ami.action({
                     'action': 'ExtensionState',
-                    'context': 'from-internal',
+                    'context': 'ippbx-from-extensions',
                     'exten': exten,
                     'actionid': '1',
                 }, function(err, ress) {
@@ -49,7 +51,6 @@ class actionsController {
 
         setTimeout(() => {
             ami.disconnect();
-
             return res.json(response)
         }, 300);
     }
@@ -88,7 +89,7 @@ class actionsController {
 
     async actionRegistered(req, res) {
         const {allExtension, IPPabx, port, user, password } = req.query;
-        console.log(req.query);
+        console.log(req.query.allExtension);
         const filterExtension = [];
         const data = [];
 
@@ -97,9 +98,10 @@ class actionsController {
         ami.keepConnected();
 
         ami.on('managerevent', function(evt) {
-            // console.log(evt);
 
-            if (evt.response === 'Success' && evt.context === 'from-internal') {
+            if (evt.response === 'Success' && evt.context === 'ippbx-from-extensions') {
+            // console.log(evt.callerid.toString().indexOf("<"));
+
                 filterExtension.push({
                     exten: evt.objectname,
                     callID: evt.callerid, 
@@ -108,18 +110,22 @@ class actionsController {
         });
         
         allExtension.map(ex =>{
-            data.push(ex.match(/[0-9]{1,4}/g)); 
+            ex = ex.toString().replace('exten', "").replace('"', "").replace('"', "").replace(':', "")
+            .replace('"', "").replace('"', "").replace('{', "").replace('}', "")
+            console.log(ex)
+            data.push(ex.match(/\S{1,20}/g)); 
         });
 
 
         data.map(exten => {
+            console.log(exten)
             ami.action({
                 'action': 'SipShowPeer',
                 'Peer': exten,
                 'actionid': '3',
             }, function(err, ress) {
                 console.log(ress.response);
-                if (ress.response === 'Success' && ress.context === 'from-internal') {
+                if (ress.response === 'Success' && ress.context === 'ippbx-from-extensions') {
                     let call = ress.callerid.match(/^"\S{1,20}"/g)
                     // let call2 = call.replace('"', "")
                     console.log(call)
@@ -137,7 +143,7 @@ class actionsController {
         setTimeout(() => {
             console.log(filterExtension);
             return res.json(filterExtension)
-        }, 200);
+        }, 300);
     }
 }
 

@@ -58,7 +58,7 @@ function Status({ history }) {
   };
   
   async function teste() {
-    console.log(consulta)
+    console.log(consulta);
     const response = await api.get('/registered', {
       params: {
         allExtension: consulta,
