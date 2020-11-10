@@ -27,7 +27,7 @@ class actionsController {
 
                 ami.action({
                     'action': 'ExtensionState',
-                    'context': 'from-internal',
+                    'context': 'ippbx-from-extensions',
                     'exten': exten,
                     'actionid': '1',
                 }, function(err, ress) {
@@ -103,7 +103,7 @@ class actionsController {
 
         ami.on('managerevent', function(evt) {
 
-            if (evt.response === 'Success' && evt.context === 'from-internal') {
+            if ((evt.response === 'Success' && evt.context === 'from-internal') || (evt.response === 'Success' && evt.context === 'ippbx-from-extensions')) {
             // console.log(evt.callerid.toString().indexOf("<"));
                 console.log(evt.callerid)
                 filterExtension.push({
@@ -129,7 +129,7 @@ class actionsController {
                 'actionid': '3',
             }, function(err, ress) {
                 console.log(ress.response);
-                if (ress.response === 'Success' && ress.context === 'from-internal') {
+                if ((ress.response === 'Success' && ress.context === 'from-internal') || (ress.response === 'Success' && ress.context === 'ippbx-from-extensions')) {
                     let ext = ress.callerid.match(/[0-9]{1,20}/g)
                     console.log(ress.callerid)
                     console.log(ext.length)
