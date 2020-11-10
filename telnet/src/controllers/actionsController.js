@@ -2,16 +2,6 @@ import amiI from 'asterisk-manager';
 let verify = 0;
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
-    async login(req, res) {
-        const { IPPabx, port, user, password } = req.query;
-        const ami = new amiI(port, IPPabx, user, password);
-        ami.keepConnected();
-
-    }
-
-    async logoff(req, res) {
-        
-    }
 
     async actionExtenStatus(req, res) {
         const { extension, IPPabx, port, user, password } = req.query;
@@ -37,7 +27,7 @@ class actionsController {
 
                 ami.action({
                     'action': 'ExtensionState',
-                    'context': 'ippbx-from-extensions',
+                    'context': 'from-internal',
                     'exten': exten,
                     'actionid': '1',
                 }, function(err, ress) {
@@ -61,6 +51,7 @@ class actionsController {
         console.log(verify);
 
         const allExtension = [];
+        
         const ami = new amiI(port, IPPabx, user, password)
         // ami.keepConnected();
 
@@ -112,7 +103,7 @@ class actionsController {
 
         ami.on('managerevent', function(evt) {
 
-            if (evt.response === 'Success' && evt.context === 'ippbx-from-extensions') {
+            if (evt.response === 'Success' && evt.context === 'from-internal') {
             // console.log(evt.callerid.toString().indexOf("<"));
                 console.log(evt.callerid)
                 filterExtension.push({
@@ -138,7 +129,7 @@ class actionsController {
                 'actionid': '3',
             }, function(err, ress) {
                 console.log(ress.response);
-                if (ress.response === 'Success' && ress.context === 'ippbx-from-extensions') {
+                if (ress.response === 'Success' && ress.context === 'from-internal') {
                     let ext = ress.callerid.match(/[0-9]{1,20}/g)
                     console.log(ress.callerid)
                     console.log(ext.length)
