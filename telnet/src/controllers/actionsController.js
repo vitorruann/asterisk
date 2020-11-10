@@ -1,5 +1,5 @@
 import amiI from 'asterisk-manager';
-
+let verify = 0;
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
     async login(req, res) {
@@ -20,7 +20,7 @@ class actionsController {
         const response = [];
         const ami = new amiI(port, IPPabx, user, password);
 
-        ami.keepConnected();
+        // ami.keepConnected();
 
         ami.connect();
 
@@ -33,7 +33,7 @@ class actionsController {
         data.map(exten => {
             
             if (exten) {
-                // console.log(exten)
+                console.log(exten);
 
                 ami.action({
                     'action': 'ExtensionState',
@@ -58,9 +58,11 @@ class actionsController {
     async actionSipPeers(req, res) {
         const { IPPabx, port, user, password } = req.query;
         console.log(req.query);
+        console.log(verify);
+
         const allExtension = [];
         const ami = new amiI(port, IPPabx, user, password)
-        ami.keepConnected();
+        // ami.keepConnected();
 
         ami.on('managerevent', function(evt) {
             // console.log(evt);
@@ -72,8 +74,16 @@ class actionsController {
                 }) 
             }
         });
-
+        // if (verify !== 0) {
+        //     ami.action({
+        //         'action': 'logoff',
+        //     }, function(err, res) {
+                
+        //     });
+        // }
+        
         ami.connect();
+        console.log(ami.connect());
         ami.action({
             'action': 'SipPeers',
             'actionid': '2',
@@ -82,26 +92,29 @@ class actionsController {
 
         setTimeout(() => {
             ami.disconnect();
-            console.log(allExtension)
+            console.log(allExtension);
+            verify = 1;
+        console.log(verify);
+
             return res.json(allExtension)
         }, 200);
     }
 
     async actionRegistered(req, res) {
         const {allExtension, IPPabx, port, user, password } = req.query;
-        console.log(req.query.allExtension);
+        // console.log(req.query.allExtension);
         const filterExtension = [];
         const data = [];
 
         const ami = new amiI(port, IPPabx, user, password);
 
-        ami.keepConnected();
+        // ami.keepConnected();
 
         ami.on('managerevent', function(evt) {
 
             if (evt.response === 'Success' && evt.context === 'ippbx-from-extensions') {
             // console.log(evt.callerid.toString().indexOf("<"));
-
+                console.log(evt.callerid)
                 filterExtension.push({
                     exten: evt.objectname,
                     callID: evt.callerid, 
@@ -126,11 +139,12 @@ class actionsController {
             }, function(err, ress) {
                 console.log(ress.response);
                 if (ress.response === 'Success' && ress.context === 'ippbx-from-extensions') {
-                    let call = ress.callerid.match(/^"\S{1,20}"/g)
-                    // let call2 = call.replace('"', "")
-                    console.log(call)
+                    let ext = ress.callerid.match(/[0-9]{1,20}/g)
+                    console.log(ress.callerid)
+                    console.log(ext.length)
+                    let finalPosition = ext.length -1;
                     filterExtension.push({
-                        exten: ress.objectname,
+                        exten: ext[finalPosition],
                         callID: ress.callerid.match(/^"\S{1,20}"/g).toString().replace('"', "").replace('"', ""), 
                     }) 
                 }
