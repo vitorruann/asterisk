@@ -61,8 +61,8 @@ export const StatusExten = styled(PerfectScrollbar)`
 
   ul {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-gap: 15px;
+    grid-template-columns: repeat(7, 1fr);
+    grid-gap: 10px;
     margin-top: 30px;
     list-style: none;
   }
@@ -89,7 +89,6 @@ export const StatusExten = styled(PerfectScrollbar)`
 `;
 
 export const BoxStatus = styled.li`
-  margin: 0 10px 0 10px;
   padding: 20px;
   border-radius: 4px;
   font-weight: bold;
