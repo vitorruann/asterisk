@@ -150,92 +150,333 @@ class actionsController {
             return res.json(filterExtension)
         }, 300);
     }
+
+    async teste(req, res) {
+        const ami = new amiI(5038, '10.1.43.11', 'admin', 'ippbx');
+        const response = [];
+        // ami.keepConnected();
+
+        ami.action({
+            'action': 'Command',
+            'command': 'core show hints',
+            'actionid': '3',
+        }, function(err, ress) {
+            response.push(ress) 
+        });
+
+        setTimeout(() => {
+            ami.disconnect();
+            let separaDados;
+            let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
+            achaQuantidade = JSON.stringify(achaQuantidade).replace(/-\s/g, '').replace('"', "").replace('"', "");
+            const quantLinhas = Number(achaQuantidade)
+
+            separaDados = JSON.stringify(response).replace(/\s(?=\s)/g, '');
+            separaDados = separaDados.split(/[\s@,:+]/);
+            
+            console.log(separaDados)
+            // const l = response.find(f => f.match("----------------") ? true : false);
+            // response.map(r => {
+            //     console.log(r);    
+            // })
+            let arrayExtensoes = [];
+            let linha = [];
+
+            // for (i = 0; i <= quantLinhas;i++) {
+            
+            // linha = response.split(/\+/g);
+
+            // separaDados = linha[i].replace(/\s(?=\s)/g, '');
+            // separaDados = separaDados.split(/[\s@,:]/, "10");
+
+            // arrayExtensoes.push({
+            //     ramal: separaDados[0],
+            //     status: separaDados[5]
+            // })
+            // }
+  
+            // console.log(arrayExtensoes);
+
+            // console.log(response)
+            return res.json(response)
+        }, 300);
+    }
 }
 
 
 export default new actionsController();
 
-// asteri.action({
-//     'action': 'ExtensionState',
-//     'context': 'ippbx-from-extensions',
-//     'exten': '5017',
-//     'actionid': '1'
-// }, function(err, res) {
-//     console.log(res);
-// })
-// console.log(responsee);
-// setTimeout(() => {
-//     asteri.disconnect();
-// }, 5000);
+//-------------------------------------------SIPPEERS-------------------------------------------
+/**
+action: sippeers
 
-        
-        // ami.on('response', function(evt) {
-        //     console.log(evt);
-        // });
+Response: Success
+Message: Peer status list will follow
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: Juntor_403
+ChanObjectType: peer
+IPaddress: 10.1.43.12
+IPport: 5060
+Dynamic: no
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored
+RealtimeDevice: no
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: Juntor402
+ChanObjectType: peer
+IPaddress: 10.1.43.12
+IPport: 5060
+Dynamic: no
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored
+RealtimeDevice: no
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: Juntor
+ChanObjectType: peer
+IPaddress: 10.1.43.12
+IPport: 5060
+Dynamic: no
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored
+RealtimeDevice: no
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: 400
+ChanObjectType: peer
+IPaddress: 10.1.43.12
+IPport: 5060
+Dynamic: no
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored
+RealtimeDevice: no
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: Ramal_205
+ChanObjectType: peer
+IPaddress: -none-
+IPport: 5060
+Dynamic: yes
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored
+RealtimeDevice: no
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: Ramal204
+ChanObjectType: peer
+IPaddress: -none-
+IPport: 5060
+Dynamic: yes
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored
+RealtimeDevice: no
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: Ramal
+ChanObjectType: peer
+IPaddress: -none-
+IPport: 5060
+Dynamic: yes
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored
+RealtimeDevice: no
+
+Event: PeerEntry
+Channeltype: SIP
+ObjectName: 202
+ChanObjectType: peer
+IPaddress: 10.1.24.156
+IPport: 5060
+Dynamic: yes
+Natsupport: yes
+VideoSupport: yes
+ACL: no
+Status: Unmonitored | UNKNOWN | UNREACHABLE | OK (3 ms)
+RealtimeDevice: no
+
+Event: PeerlistComplete
+ListItems: 8
+
+*/
+
+//-------------------------------------------ISIP/SIP SHOW PEER-------------------------------------------
+/**
+action: sipshowpeer
+peer: 202
+
+Response: Success
+Channeltype: SIP
+ObjectName: 202
+ChanObjectType: peer
+SecretExist: Y
+MD5SecretExist: N
+Context: ippbx-from-extensions
+Language: pt_BR
+AMAflags: Unknown
+CID-CallingPres: Presentation Allowed, Not Screene
+Callgroup:
+Pickupgroup:
+VoiceMailbox: 202@ippbx-from-extension
+TransferMode: open
+LastMsgsSent: 0
+Call-limit: 100
+MaxCallBR: 384 kbps
+Dynamic: Y
+Callerid: "202" <202>
+RegExpire: 12153 seconds
+SIP-AuthInsecure: port,invite
+SIP-NatSupport: Always
+ACL: N
+SIP-CanReinvite: Y
+SIP-PromiscRedir: N
+SIP-UserPhone: N
+SIP-VideoSupport: Y
+SIP-Sess-Timers: Accept
+SIP-Sess-Refresh: uas
+SIP-Sess-Expires: 1800
+SIP-Sess-Min: 90
+SIP-DTMFmode: info
+SIPLastMsg: 0
+ToHost:
+Address-IP: 10.1.24.156
+Address-Port: 5060
+Default-addr-IP: 0.0.0.0
+Default-addr-port: 5060
+Default-Username: 202
+Codecs: 0x10c (ulaw|alaw|g729)
+CodecOrder: g729,alaw,ulaw
+Status: Unmonitored
+SIP-Useragent:
+Reg-Contact : sip:202@10.1.24.156:5060
+*/
+
+//-------------------------------------------EXTENSIONSTATE-------------------------------------------
+/**
+action: extensionstate
+context: ippbx-from-extension
+exten: 400
+
+Response: Success
+Message: Extension Status
+Exten: 400
+Context: ippbx-from-extension
+Hint:
+Status: -1 (Ramal não encontrado) | 0 (Ramal livre)| 1 (Ramal em uso)| 
+         2 (Ramal ocuapdo)| 4 (Ramal indisponível)| 8 (Ramal ringando)| 
+         16 (Ramal em espera)
+*/
+
+//-------------------------------------------CORE SHOW HINTS-------------------------------------------
+/**
+cip850*CLI> core show hints
+cip850*CLI>
+-= Registered Asterisk Dial Plan Hints =-
+0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
+4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0
+4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0
+399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0
+600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0
+401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0
+400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0
+501@ippbx-from-extension: Zap/2                 State:Unavailable     Watchers  0
+----------------
+- 8 hints registered
 
 
-    //     async actionExten(req, res) {
-    //         let responsee;
-    //         ami.keepConnected();
-     
-    // // Listen for any/all AMI events.
-    //         ami.on('managerevent', function(evt) {
-    //             console.log(evt)
-    //         });   
-    //         ami.connect();
-    //         ami.action({
-    //             'action': 'ExtensionState',
-    //             'context': 'ippbx-from-extensions',
-    //             'exten': '5017',
-    //             'actionid': '1',
-    //         }, function(err, ress) {
-    //             // let data = fs.read(ress, 'utf8', function(err, data) {
-    //             //     console.log(data);
-    //             // })
-    //             console.log(ress);
-    //             console.log('5');
-    //             responsee = ress
-    
-    //         });
-    //         ami.action({
-    //             'action': 'Logoff',
-    //         }, function(err, ress) {
-    //             console.log(ress)
-    //             console.log('6');
-    //         });
-            
-            
-    //         console.log('7');
-    //         setTimeout(() => {
-    //             console.log('14');
-    //             ami.disconnect();
-    //             console.log(responsee)
-    //             return res.json(responsee)
-    //             }, 1500);
-    //     }
+*/
 
-    // const { extension, IPPabx, port, user, password } = req.query;
-    //     console.log(req.query);
-    //     let responsee;
-    //     const ami = new amiI(port, IPPabx, user, password);
+//-------------------------------------------COMPARAÇÃO-------------------------------------------
+/**
+Ramais      Juntores
+200         400
+201         401
+202         402
+203         403
+204
+205
 
-    //     ami.keepConnected();
-        
-    //     ami.connect();
-    //     ami.action({
-    //         'action': 'ExtensionState',
-    //         'context': 'ippbx-from-extensions',
-    //         'exten': extension,
-    //         'actionid': '1',
-    //     }, function(err, ress) {
-    //         console.log(ress);
-    //         responsee = ress
-    //      });
+cip850*CLI> isip show peers
+Name/username              Host            Dyn Nat ACL Port     Status
+Juntor_403                 10.1.43.12           N      5060     Unmonitored
+Juntor402                  10.1.43.12           N      5060     Unmonitored
+Juntor/401                 10.1.43.12           N      5060     Unmonitored
+400                        10.1.43.12           N      5060     Unmonitored
+Ramal_205                  (Unspecified)    D   N      5060     Unmonitored
+Ramal204                   (Unspecified)    D   N      5060     Unmonitored
+Ramal                      (Unspecified)    D   N      5060     Unmonitored
+202/202                    10.1.24.156      D   N      5060     Unmonitored
+8 sip peers [Monitored: 0 online, 0 offline Unmonitored: 8 online, 0 offline]
 
+cip850*CLI> core show hints
+cip850*CLI>
+-= Registered Asterisk Dial Plan Hints =-
+0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
+205@ippbx-from-extension: SIP/Ramal_205         State:Unavailable     Watchers  0
+204@ippbx-from-extension: SIP/Ramal204          State:Unavailable     Watchers  0
+203@ippbx-from-extension: SIP/Ramal             State:Unavailable     Watchers  0
+202@ippbx-from-extension: SIP/202               State:Idle            Watchers  0
+201@ippbx-from-extension: Zap/4                 State:Idle            Watchers  0
+200@ippbx-from-extension: Zap/3                 State:Idle            Watchers  0
+----------------
+- 7 hints registered
 
-    //     setTimeout(() => {
-    //         ami.disconnect();
+cip850*CLI> isip show peer 400
+  * Name       : 400
+  Context      : ippbx-from-trunks
+  ToHost       : 10.1.43.12
+  Addr->IP     : 10.1.43.12 Port 5060
+  Defaddr->IP  : 0.0.0.0 Port 5060
+  Def. Username:
+  Status       : Unmonitored
+  Useragent    :
+  Sess-Expires : 1800 secs
 
-    //         return res.json(responsee)
-    //     }, 100);
-    // }
+cip850*CLI> isip show peer 202
+  * Name       : 202
+  Context      : ippbx-from-extensions
+  Mailbox      : 202@ippbx-from-extension
+  VM Extension : asterisk
+  Call limit   : 100
+  Callerid     : "202" <202>
+  Status       : Unmonitored
+  Useragent    :
+  Reg. Contact : sip:202@10.1.24.156:5060
+
+cip850*CLI> isip show peer Ramal_205
+cip850*CLI>
+
+  * Name       : Ramal_205
+  Context      : ippbx-from-extensions
+  Mailbox      : 205@ippbx-from-extension
+  Callerid     : "Ramal_205" <205>
+  Addr->IP     : (Unspecified) Port 5060
+  Defaddr->IP  : 0.0.0.0 Port 5060
+  Def. Username:
+  Status       : Unmonitored
+  Useragent    :
+  Reg. Contact : 
+
+*/
