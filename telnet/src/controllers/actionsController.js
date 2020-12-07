@@ -48,7 +48,6 @@ class actionsController {
     async actionSipPeers(req, res) {
         const { IPPabx, port, user, password } = req.query;
         console.log(req.query);
-        console.log(verify);
 
         const allExtension = [];
         
@@ -65,13 +64,6 @@ class actionsController {
                 }) 
             }
         });
-        // if (verify !== 0) {
-        //     ami.action({
-        //         'action': 'logoff',
-        //     }, function(err, res) {
-                
-        //     });
-        // }
         
         ami.connect();
         console.log(ami.connect());
@@ -169,36 +161,43 @@ class actionsController {
             let separaDados;
             let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
             achaQuantidade = JSON.stringify(achaQuantidade).replace(/-\s/g, '').replace('"', "").replace('"', "");
-            const quantLinhas = Number(achaQuantidade)
+            const quantLinhas = Number(achaQuantidade) -1;
+            let indexIni = JSON.stringify(response).indexOf("Watchers  0") + 32
+            let indexFim = JSON.stringify(response).indexOf("--") - 262
 
-            separaDados = JSON.stringify(response).replace(/\s(?=\s)/g, '');
-            separaDados = separaDados.split(/[\s@,:+]/);
-            
-            console.log(separaDados)
-            // const l = response.find(f => f.match("----------------") ? true : false);
-            // response.map(r => {
-            //     console.log(r);    
-            // })
+            let arrayFinal = JSON.stringify(response).substr(indexIni, indexFim)
+
+
+            console.log(arrayFinal.trim(), quantLinhas)
+
             let arrayExtensoes = [];
             let linha = [];
 
-            // for (i = 0; i <= quantLinhas;i++) {
+            for (let i = 0; i < quantLinhas;i++) {
+            linha = arrayFinal.split(/\\n/g);
+            separaDados = linha[i].replace(/\s(?=\s)/g, "");
+            separaDados = separaDados.split(/[\s@,:/]/g);
             
-            // linha = response.split(/\+/g);
-
-            // separaDados = linha[i].replace(/\s(?=\s)/g, '');
-            // separaDados = separaDados.split(/[\s@,:]/, "10");
-
-            // arrayExtensoes.push({
-            //     ramal: separaDados[0],
-            //     status: separaDados[5]
-            // })
-            // }
-  
-            // console.log(arrayExtensoes);
-
+            if (i === 0) {
+                arrayExtensoes.push({
+                    ramal: separaDados[0],
+                    context: separaDados[1],
+                    tipo: separaDados[3],
+                    status: separaDados[6]
+                });
+            } else {
+                arrayExtensoes.push({
+                    ramal: separaDados[1],
+                    context: separaDados[2],
+                    tipo: separaDados[4],
+                    status: separaDados[7]
+                });
+            }
+            
+            }
+            console.log(arrayExtensoes);
             // console.log(response)
-            return res.json(response)
+            return res.json(arrayExtensoes)
         }, 300);
     }
 }
