@@ -21,7 +21,16 @@ function Status({ history }) {
   useEffect(() =>{
     async function loadAllExtension() {
 
-      const response = await api.get('/sipPeers', {
+      // const response = await api.get('/sipPeers', {
+      //   params: {
+      //     IPPabx: history.location.state.IPPabx,
+      //     port: history.location.state.port,
+      //     user: history.location.state.user,
+      //     password: history.location.state.password
+      //   }
+      // });
+
+      const response2 = await api.get('/teste', {
         params: {
           IPPabx: history.location.state.IPPabx,
           port: history.location.state.port,
@@ -30,18 +39,9 @@ function Status({ history }) {
         }
       });
 
-      setAllExtension(response.data);
-
-      response.data.map(data => {
-        if (data.exten) {
-          backend.push({
-            exten: data.exten
-          })  
-        }
-        return backend;
-      });
-
-      setConsulta(backend)
+      // setAllExtension(response.data);
+      setFilterExtension(response2.data);
+      return
     }      
 
     loadAllExtension();
@@ -53,35 +53,10 @@ function Status({ history }) {
   ]);
 
   async function handleSubmit() {
-    teste();
+    setFinalExtension(filterExtension)
     findExten = 'on';
+    console.log(findExten)
   };
-  
-  async function teste() {
-    console.log(consulta);
-    const response = await api.get('/registered', {
-      params: {
-        allExtension: consulta,
-        IPPabx: history.location.state.IPPabx,
-        port: history.location.state.port,
-        user: history.location.state.user,
-        password: history.location.state.password
-      }
-    });
-    
-    response.data.map(data => {
-      if (data.exten) {
-        backend.push({
-          exten: data.exten
-        })  
-      }
-      return backend;
-    });
-    setFilterExtension(backend);
-    setFinalExtension(response.data)
-    console.log(response.data)
-  };
-
 
   async function handleStartStop() {
     if (control === 'off') {

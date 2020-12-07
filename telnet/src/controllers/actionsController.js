@@ -11,11 +11,14 @@ class actionsController {
         // ami.keepConnected();
 
         ami.connect();
-        
-        //formatação dos dados que vem do frontend, 
-        
+
+        /** formatação dos dados que vem do frontend, aproveitamos apenas exten e context para fazer a action ExtensionState
+            Dados chegam: '{"exten":"9003","context":"ippbx-from-extension","tipo":"SIP","status":"Unavailable"}',
+            Tratados ficam:   { exten: '9003', context: 'ippbx-from-extension' },
+            os dados tratados são armazenados no array "data" que depois é mapeado para realizar a action de cada extensão
+         */
         extension.map(ex =>{
-            ex = ex.toString().replace(/[{"}']/g, "").split(/[,:]/g);
+            ex = ex.toString().replace(/['{"}]/g, "").split(/[,:]/g);
 
             data.push({
                 exten: ex[1],
@@ -40,7 +43,6 @@ class actionsController {
 
         setTimeout(() => {
             ami.disconnect();
-            console.log(response)
             return res.json(response)
         }, 300);
     }
@@ -143,12 +145,12 @@ class actionsController {
 
     async teste(req, res) {
         const { IPPabx, port, user, password } = req.query;
-
-        const ami = new amiI(port, IPPabx, user, password);
-
+        const ami = new amiI(5038, '10.1.43.11', 'admin', 'ippbx');
         const response = [];
-        // ami.keepConnected();
-        ami.connect();
+
+        ami.on('managerevent', function(evt) {
+            console.log(evt.response);
+        });
 
         ami.action({
             'action': 'Command',
@@ -161,7 +163,9 @@ class actionsController {
 
         setTimeout(() => {
             ami.disconnect();
-            let separaDados;
+            try {
+                console.log(response);
+                let separaDados;
             let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
             achaQuantidade = JSON.stringify(achaQuantidade).replace(/-\s/g, '').replace('"', "").replace('"', "");
             const quantLinhas = Number(achaQuantidade) -1;
@@ -198,6 +202,11 @@ class actionsController {
             }
             
             }
+            } catch (error) {
+                return res.json(error)
+            }
+            
+            
             console.log(arrayExtensoes);
             // console.log(response)
             return res.json(arrayExtensoes)
