@@ -5,42 +5,42 @@ class actionsController {
 
     async actionExtenStatus(req, res) {
         const { extension, IPPabx, port, user, password } = req.query;
-        // console.log(req.query.extension)
         const data = [];
         const response = [];
         const ami = new amiI(port, IPPabx, user, password);
-
         // ami.keepConnected();
 
         ami.connect();
-
+        
+        //formatação dos dados que vem do frontend, 
+        
         extension.map(ex =>{
-            ex = ex.toString().replace('exten', "").replace('"', "").replace('"', "").replace(':', "")
-            .replace('"', "").replace('"', "").replace('{', "").replace('}', "")
-            data.push(ex.match(/\S{1,20}/g)); 
+            ex = ex.toString().replace(/[{"}']/g, "").split(/[,:]/g);
+
+            data.push({
+                exten: ex[1],
+                context: ex[3]
+            }); 
         });
 
         data.map(exten => {
-            
-            if (exten) {
-                console.log(exten);
 
+            if (exten.exten) {
                 ami.action({
                     'action': 'ExtensionState',
-                    'context': 'ippbx-from-extensions',
-                    'exten': exten,
+                    'context': exten.context + 's',
+                    'exten': exten.exten,
                     'actionid': '1',
                 }, function(err, ress) {
-                    // console.log(ress);
+                    console.log(ress)
                     response.push(ress)
                 });
             }
-            
         });
-        
 
         setTimeout(() => {
             ami.disconnect();
+            console.log(response)
             return res.json(response)
         }, 300);
     }
@@ -75,10 +75,8 @@ class actionsController {
 
         setTimeout(() => {
             ami.disconnect();
-            console.log(allExtension);
-            verify = 1;
-        console.log(verify);
 
+            console.log(allExtension);
             return res.json(allExtension)
         }, 200);
     }
@@ -144,15 +142,20 @@ class actionsController {
     }
 
     async teste(req, res) {
-        const ami = new amiI(5038, '10.1.43.11', 'admin', 'ippbx');
+        const { IPPabx, port, user, password } = req.query;
+
+        const ami = new amiI(port, IPPabx, user, password);
+
         const response = [];
         // ami.keepConnected();
+        ami.connect();
 
         ami.action({
             'action': 'Command',
             'command': 'core show hints',
             'actionid': '3',
         }, function(err, ress) {
+            console.log(ress)
             response.push(ress) 
         });
 
@@ -180,16 +183,16 @@ class actionsController {
             
             if (i === 0) {
                 arrayExtensoes.push({
-                    ramal: separaDados[0],
+                    exten: separaDados[0],
                     context: separaDados[1],
                     tipo: separaDados[3],
                     status: separaDados[6]
                 });
             } else {
                 arrayExtensoes.push({
-                    ramal: separaDados[1],
+                    exten: separaDados[1],
                     context: separaDados[2],
-                    tipo: separaDados[4],
+                    type: separaDados[4],
                     status: separaDados[7]
                 });
             }
