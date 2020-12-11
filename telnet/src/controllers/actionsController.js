@@ -3,6 +3,89 @@ let verify = 0;
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
 
+    async actionHints(req, res) {
+        const { IPPabx, port, user, password } = req.query;
+        const ami = new amiI(port, IPPabx, user, password);
+        const arrayExtensions = [];
+        const response = [];
+
+        /**
+         * Abrimos a conexão com o AMI e realizamos o comando core show hints para pegar todas as extensões locais
+         * Adicionamos o retorno deste comando no array denominado "response"
+         */
+        ami.action({
+            'action': 'Command',
+            'command': 'core show hints',
+            'actionid': '3',
+        }, function(err, ress) {
+            response.push(ress) 
+        });
+
+        /**
+         * Setamos um TimeOut para dar tempo da action ser completada, pois o comando pode trazer muitas linhas.
+         * 
+         * Para achar a quantidade de extensiões que foram encontradas no comando core show hints, procuramos por
+         * "- xx" ou seja, tentamos encontrar uma barra, que após ela tenha um espaço em branco e em seguida qualquer
+         * número de até 5 dígitos, para isso usamos a expressão match(/-\s[0-9]{0,5}/)[0], o retorno dessa procura é 
+         * algo como "'- 10'", no caso de ter encontrado 10 ocorrências. Para limpar e ficarmos apenas com os números utilizamos
+         * a expressão match(/[0-9]{1,5}/). Depois colocamos essa informação dentro da constante "quantLinhas" e diminuimos 1 
+         * pois o array iniciará em 0.
+         * 
+         * 
+         */
+        setTimeout(() => {
+            ami.disconnect();
+            try {
+                console.log(response);
+                let separaDados;
+                
+                let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
+                achaQuantidade = JSON.stringify(achaQuantidade).match(/[0-9]{1,5}/);
+                const quantLinhas = Number(achaQuantidade) -1;
+
+                let indexIni = JSON.stringify(response).indexOf("Watchers  0") + 32
+                let indexFim = JSON.stringify(response).indexOf("--") - 262
+
+                let arrayFinal = JSON.stringify(response).substr(indexIni, indexFim)
+
+
+                // console.log(arrayFinal ,quantLinhas)
+
+                let linha = [];
+
+                for (let i = 0; i < quantLinhas;i++) {
+                    linha = arrayFinal.split(/\\n/g);
+                    separaDados = linha[i].replace(/\s(?=\s)/g, "");
+                    separaDados = separaDados.split(/[\s@,:/]/g);
+                    console.log(separaDados)
+                    
+                    if (i === 0) {
+                        arrayExtensions.push({
+                            exten: separaDados[0],
+                            context: separaDados[1],
+                            type: separaDados[3],
+                            status: separaDados[6]
+                        });
+                    } else {
+                        arrayExtensions.push({
+                            exten: separaDados[1],
+                            context: separaDados[2],
+                            type: separaDados[4],
+                            status: separaDados[7]
+                        });
+                    }
+
+                }
+            } catch (error) {
+                return res.json(error)
+            }
+            
+            console.log(arrayExtensions);
+            // console.log(response)
+            return res.json(arrayExtensions)
+        }, 100);
+    }
+
     async actionExtenStatus(req, res) {
         const { extension, IPPabx, port, user, password } = req.query;
         const data = [];
@@ -57,7 +140,7 @@ class actionsController {
         // ami.keepConnected();
 
         ami.on('managerevent', function(evt) {
-            // console.log(evt);
+            console.log(evt);
             if (evt.event === 'PeerEntry') {
                 allExtension.push({
                     exten: evt.objectname,
@@ -80,140 +163,9 @@ class actionsController {
 
             console.log(allExtension);
             return res.json(allExtension)
-        }, 200);
-    }
-
-    async actionRegistered(req, res) {
-        const {allExtension, IPPabx, port, user, password } = req.query;
-        // console.log(req.query.allExtension);
-        const filterExtension = [];
-        const data = [];
-
-        const ami = new amiI(port, IPPabx, user, password);
-
-        // ami.keepConnected();
-
-        ami.on('managerevent', function(evt) {
-
-            if ((evt.response === 'Success' && evt.context === 'from-internal') || (evt.response === 'Success' && evt.context === 'ippbx-from-extensions')) {
-            // console.log(evt.callerid.toString().indexOf("<"));
-                console.log(evt.callerid)
-                filterExtension.push({
-                    exten: evt.objectname,
-                    callID: evt.callerid, 
-                }) 
-            }
-        });
-        
-        allExtension.map(ex =>{
-            ex = ex.toString().replace('exten', "").replace('"', "").replace('"', "").replace(':', "")
-            .replace('"', "").replace('"', "").replace('{', "").replace('}', "")
-            console.log(ex)
-            data.push(ex.match(/\S{1,20}/g)); 
-        });
-
-
-        data.map(exten => {
-            console.log(exten)
-            ami.action({
-                'action': 'SipShowPeer',
-                'Peer': exten,
-                'actionid': '3',
-            }, function(err, ress) {
-                console.log(ress.response);
-                if ((ress.response === 'Success' && ress.context === 'from-internal') || (ress.response === 'Success' && ress.context === 'ippbx-from-extensions')) {
-                    let ext = ress.callerid.match(/[0-9]{1,20}/g)
-                    console.log(ress.callerid)
-                    console.log(ext.length)
-                    let finalPosition = ext.length -1;
-                    filterExtension.push({
-                        exten: ext[finalPosition],
-                        callID: ress.callerid.match(/^"\S{1,20}"/g).toString().replace('"', "").replace('"', ""), 
-                    }) 
-                }
-                
-            });
-        });
-        
-        ami.connect();
-
-        setTimeout(() => {
-            console.log(filterExtension);
-            return res.json(filterExtension)
-        }, 300);
-    }
-
-    async teste(req, res) {
-        const { IPPabx, port, user, password } = req.query;
-        const ami = new amiI(5038, '10.1.43.11', 'admin', 'ippbx');
-        const response = [];
-
-        ami.on('managerevent', function(evt) {
-            console.log(evt.response);
-        });
-
-        ami.action({
-            'action': 'Command',
-            'command': 'core show hints',
-            'actionid': '3',
-        }, function(err, ress) {
-            console.log(ress)
-            response.push(ress) 
-        });
-
-        setTimeout(() => {
-            ami.disconnect();
-            try {
-                console.log(response);
-                let separaDados;
-            let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
-            achaQuantidade = JSON.stringify(achaQuantidade).replace(/-\s/g, '').replace('"', "").replace('"', "");
-            const quantLinhas = Number(achaQuantidade) -1;
-            let indexIni = JSON.stringify(response).indexOf("Watchers  0") + 32
-            let indexFim = JSON.stringify(response).indexOf("--") - 262
-
-            let arrayFinal = JSON.stringify(response).substr(indexIni, indexFim)
-
-
-            console.log(arrayFinal.trim(), quantLinhas)
-
-            let arrayExtensoes = [];
-            let linha = [];
-
-            for (let i = 0; i < quantLinhas;i++) {
-            linha = arrayFinal.split(/\\n/g);
-            separaDados = linha[i].replace(/\s(?=\s)/g, "");
-            separaDados = separaDados.split(/[\s@,:/]/g);
-            
-            if (i === 0) {
-                arrayExtensoes.push({
-                    exten: separaDados[0],
-                    context: separaDados[1],
-                    tipo: separaDados[3],
-                    status: separaDados[6]
-                });
-            } else {
-                arrayExtensoes.push({
-                    exten: separaDados[1],
-                    context: separaDados[2],
-                    type: separaDados[4],
-                    status: separaDados[7]
-                });
-            }
-            
-            }
-            } catch (error) {
-                return res.json(error)
-            }
-            
-            
-            console.log(arrayExtensoes);
-            // console.log(response)
-            return res.json(arrayExtensoes)
-        }, 300);
+        }, 100);
     }
 }
-
 
 export default new actionsController();
 
@@ -491,3 +443,65 @@ cip850*CLI>
   Reg. Contact : 
 
 */
+
+/**
+ *     async actionRegistered(req, res) {
+        const {allExtension, IPPabx, port, user, password } = req.query;
+        // console.log(req.query.allExtension);
+        const filterExtension = [];
+        const data = [];
+
+        const ami = new amiI(port, IPPabx, user, password);
+
+        // ami.keepConnected();
+
+        ami.on('managerevent', function(evt) {
+
+            if ((evt.response === 'Success' && evt.context === 'from-internal') || (evt.response === 'Success' && evt.context === 'ippbx-from-extensions')) {
+            // console.log(evt.callerid.toString().indexOf("<"));
+                console.log(evt.callerid)
+                filterExtension.push({
+                    exten: evt.objectname,
+                    callID: evt.callerid, 
+                }) 
+            }
+        });
+        
+        allExtension.map(ex =>{
+            ex = ex.toString().replace('exten', "").replace('"', "").replace('"', "").replace(':', "")
+            .replace('"', "").replace('"', "").replace('{', "").replace('}', "")
+            console.log(ex)
+            data.push(ex.match(/\S{1,20}/g)); 
+        });
+
+
+        data.map(exten => {
+            console.log(exten)
+            ami.action({
+                'action': 'SipShowPeer',
+                'Peer': exten,
+                'actionid': '3',
+            }, function(err, ress) {
+                console.log(ress.response);
+                if ((ress.response === 'Success' && ress.context === 'from-internal') || (ress.response === 'Success' && ress.context === 'ippbx-from-extensions')) {
+                    let ext = ress.callerid.match(/[0-9]{1,20}/g)
+                    console.log(ress.callerid)
+                    console.log(ext.length)
+                    let finalPosition = ext.length -1;
+                    filterExtension.push({
+                        exten: ext[finalPosition],
+                        callID: ress.callerid.match(/^"\S{1,20}"/g).toString().replace('"', "").replace('"', ""), 
+                    }) 
+                }
+                
+            });
+        });
+        
+        ami.connect();
+
+        setTimeout(() => {
+            console.log(filterExtension);
+            return res.json(filterExtension)
+        }, 300);
+    }
+ */

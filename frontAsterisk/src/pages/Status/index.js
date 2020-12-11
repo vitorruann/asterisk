@@ -13,24 +13,13 @@ function Status({ history }) {
   const [allExtension, setAllExtension] = useState([]);
   const [finalExtension, setFinalExtension] = useState([]);
   const [filterExtension, setFilterExtension] = useState([]);
-  const [consulta, setConsulta] = useState([]);
-  const backend = [];
 
   let timer;
   
   useEffect(() =>{
     async function loadAllExtension() {
 
-      // const response = await api.get('/sipPeers', {
-      //   params: {
-      //     IPPabx: history.location.state.IPPabx,
-      //     port: history.location.state.port,
-      //     user: history.location.state.user,
-      //     password: history.location.state.password
-      //   }
-      // });
-
-      const response2 = await api.get('/teste', {
+      const response = await api.get('/sipPeers', {
         params: {
           IPPabx: history.location.state.IPPabx,
           port: history.location.state.port,
@@ -39,8 +28,8 @@ function Status({ history }) {
         }
       });
 
-      // setAllExtension(response.data);
-      setFilterExtension(response2.data);
+
+      setAllExtension(response.data);
       return
     }      
 
@@ -53,19 +42,35 @@ function Status({ history }) {
   ]);
 
   async function handleSubmit() {
-    setFinalExtension(filterExtension)
     findExten = 'on';
-    console.log(findExten)
+
+    const response = await api.get('/sipHints', {
+      params: {
+        IPPabx: history.location.state.IPPabx,
+        port: history.location.state.port,
+        user: history.location.state.user,
+        password: history.location.state.password
+      }
+    });
+
+    setFilterExtension(response.data);
+    setFinalExtension(response.data);
+
+
   };
 
   async function handleStartStop() {
     if (control === 'off') {
       control = 'on';
+      reloadState();
     } else {
       control = 'off';
+
+      setTimeout(() => {
+        setFinalExtension(filterExtension);
+        
+      }, 4010);
     }
-    
-    reloadState();
   };
 
   async function reloadState() {
@@ -105,7 +110,7 @@ function Status({ history }) {
       if (control === 'off') {
         clearInterval(timer);
       }
-    }, 5000);
+    }, 4000);
   };
 
 
@@ -139,7 +144,7 @@ function Status({ history }) {
           </InfoExten>
         </div>
 
-        <div class="col-9">
+        <div class="col-6 col-sm-9 col-md-9">
           <div class="Titulos">
             <MdPhone size={30} color="#000" />
             <h5>Status dos ramais</h5>

@@ -13,11 +13,18 @@ export const Container = styled.div`
     background-color: #ddd;
     border-radius: 4px;
     max-height: 50px;
+    overflow-x: hidden;
   }
 
   h5 {
     padding-left: 10px;
     font-weight: bold;
+  }
+
+  .row {
+    margin-right: 0px;
+    margin-left: 0px;
+    height: calc(100% - 140px);
   }
 `;
 
@@ -50,7 +57,7 @@ export const Header = styled.div`
 
 export const StatusExten = styled(PerfectScrollbar)`
   overflow: hidden;
-  height: 700px;
+  height: calc(100% - 140px);
   margin-right: 10px;
   background: transparent;
   padding-bottom:10px;
@@ -115,7 +122,7 @@ export const BoxStatus = styled.li`
 
 export const InfoExten = styled(PerfectScrollbar)`
   overflow: hidden;
-  max-height: 700px;
+  height: calc(100% - 140px);
   margin-left: 10px;
   background: transparent;
   padding-bottom:10px;
