@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from  'axios';
 
 import api from '../../services/api';
 import { Container, Header, StatusExten, BoxStatus, InfoExten, InfoBox } from './styles';
@@ -9,17 +10,16 @@ import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdSettin
 let control = 'off';
 let findExten = 'off';
 
+
 function Status({ history }) {
-  const [allExtension, setAllExtension] = useState([]);
   const [finalExtension, setFinalExtension] = useState([]);
-  const [filterExtension, setFilterExtension] = useState([]);
+  const [initialExtension, setInitialExtension] = useState([]);
 
   let timer;
   
   useEffect(() =>{
     async function loadAllExtension() {
-
-      const response = await api.get('/sipPeers', {
+      const response = await api.get('/sipHints', {
         params: {
           IPPabx: history.location.state.IPPabx,
           port: history.location.state.port,
@@ -27,10 +27,16 @@ function Status({ history }) {
           password: history.location.state.password
         }
       });
+      setInitialExtension(response.data);
+      setFinalExtension(response.data);
 
+      
+      const ap2 = axios.create({
+        baseURL: 'http://10.1.43.11'
+      });
 
-      setAllExtension(response.data);
-      return
+      const histo = await ap2.get('/config?module=cdr&mode=pagenavigation&action=page&js=1&start=56&end=67')
+      console.log(histo)
     }      
 
     loadAllExtension();
@@ -53,22 +59,19 @@ function Status({ history }) {
       }
     });
 
-    setFilterExtension(response.data);
     setFinalExtension(response.data);
-
-
   };
 
   async function handleStartStop() {
     if (control === 'off') {
       control = 'on';
       reloadState();
+      
     } else {
       control = 'off';
 
       setTimeout(() => {
-        setFinalExtension(filterExtension);
-        
+        setFinalExtension(initialExtension);
       }, 4010);
     }
   };
@@ -78,7 +81,7 @@ function Status({ history }) {
 
       const response = await api.get('/extensionStatus', {
         params: {
-          extension: filterExtension,
+          extension: finalExtension,
           IPPabx: history.location.state.IPPabx,
           port: history.location.state.port,
           user: history.location.state.user,
@@ -117,7 +120,7 @@ function Status({ history }) {
   return (
     <Container class="container">
       <Header>
-          <img src={IconTele} alt="" srcset=""/>
+          <img src={IconTele} alt="" />
           <div>
             <h2>Mesa operadora</h2>
           </div>
@@ -128,20 +131,10 @@ function Status({ history }) {
 
           <div class="Titulos">
             <MdSettingsPhone size={30} />
-            <h5>Todas extensões</h5>
+            <h5>Desenvolvimento futuro</h5>
           </div>  
 
-          <InfoExten >
-            <ul>
-              {allExtension.map(e => (
-                <InfoBox key={e.exten}>
-                  <strong>{e.exten}</strong>
-                  <span>{e.host}</span>
-                  <span>Porta: {e.portExten}</span>
-                </InfoBox>
-              ))}
-            </ul>
-          </InfoExten>
+
         </div>
 
         <div class="col-6 col-sm-9 col-md-9">
@@ -155,20 +148,16 @@ function Status({ history }) {
                 <BoxStatus key={fe.actionid} status={fe.status} >
                   <label>{fe.exten}</label>
                   <label>{fe.status}</label>
-                  <label>{fe.callID}</label>
+                  <label>{fe.host}</label>
                 </BoxStatus>
               ))}
             </ul>
             <button class="bt1" type="button" onClick={handleSubmit}><MdRefresh size={30} color="#000"/></button>
-            <button 
-                type="button" 
-                onClick={handleStartStop} 
-                disabled={findExten === 'off' ? true : false 
-              }>
-              {control === "on" ? 
+            <button type="button" onClick={handleStartStop} >
+              {
+                control === "on" ? 
                 <MdPauseCircleOutline size={30} color="#000"/> : 
-                <MdPlayCircleOutline size={30} color={findExten === 'off' ? '#ccc' : '#000' 
-                }/>
+                <MdPlayCircleOutline size={30} color="#000" />
               }
             </button>
           </StatusExten>

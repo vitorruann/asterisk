@@ -23,33 +23,58 @@ class actionsController {
 
         /**
          * Setamos um TimeOut para dar tempo da action ser completada, pois o comando pode trazer muitas linhas.
-         * 
-         * Para achar a quantidade de extensiões que foram encontradas no comando core show hints, procuramos por
-         * "- xx" ou seja, tentamos encontrar uma barra, que após ela tenha um espaço em branco e em seguida qualquer
-         * número de até 5 dígitos, para isso usamos a expressão match(/-\s[0-9]{0,5}/)[0], o retorno dessa procura é 
-         * algo como "'- 10'", no caso de ter encontrado 10 ocorrências. Para limpar e ficarmos apenas com os números utilizamos
-         * a expressão match(/[0-9]{1,5}/). Depois colocamos essa informação dentro da constante "quantLinhas" e diminuimos 1 
-         * pois o array iniciará em 0.
-         * 
-         * 
          */
         setTimeout(() => {
             ami.disconnect();
             try {
                 console.log(response);
                 let separaDados;
-                
+            /** 
+            * Para achar a quantidade de extensiões que foram encontradas no comando core show hints, procuramos por
+            * "- xx" ou seja, tentamos encontrar uma barra, que após ela tenha um espaço em branco e em seguida qualquer
+            * número de até 5 dígitos, para isso usamos a expressão match(/-\s[0-9]{0,5}/)[0], o retorno dessa procura é 
+            * algo como "'- 10'", no caso de ter encontrado 10 ocorrências. Para limpar e ficarmos apenas com os números utilizamos
+            * a expressão match(/[0-9]{1,5}/). Depois colocamos essa informação dentro da constante "quantLinhas" e diminuimos 1 
+            * pois o array iniciará em 0. Lambrando que isso tudo é feito após transformar o retorno que vem em JSON para string
+            * */       
                 let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
                 achaQuantidade = JSON.stringify(achaQuantidade).match(/[0-9]{1,5}/);
                 const quantLinhas = Number(achaQuantidade) -1;
-
-                let indexIni = JSON.stringify(response).indexOf("Watchers  0") + 32
-                let indexFim = JSON.stringify(response).indexOf("--") - 262
+            /**
+             * Para limpar o conteudo e pegar somente as informações uteis a estratégia foi encontrar o local do "=-" na string e
+             * adicionar mais 4 posições. A soma de 4 é para não pegar o "=-/n" e depois encontramos a expressão "--" e diminuimos 
+             * 140 para retirar os caracteres que não precisamos (é tudo isso por que tem muito espaço em branco).
+             * 
+             * A entrada é algo como:
+             * -= Registered Asterisk Dial Plan Hints =-  (PEGAMOS ESSE INDEX)
+             * 0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
+             * 4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0
+             * 4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0
+             * 399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0
+             * 600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0
+             * 401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0
+             * 400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0
+             * 501@ippbx-from-extension: Zap/2                 State:Unavailable     Watchers  0
+             * ----------------
+             * - 8 hints registered
+             * 
+             * Depois de limpar fica:
+             * 0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
+             * 4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0
+             * 4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0
+             * 399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0
+             * 600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0
+             * 401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0
+             * 400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0
+             * 501@ippbx-from-extension: Zap/2                 State:Unavailable     Watchers  0
+             */
+                let indexIni = JSON.stringify(response).indexOf("=-") + 4
+                let indexFim = JSON.stringify(response).indexOf("--") - 140
 
                 let arrayFinal = JSON.stringify(response).substr(indexIni, indexFim)
 
 
-                // console.log(arrayFinal ,quantLinhas)
+                console.log(arrayFinal ,quantLinhas)
 
                 let linha = [];
 
@@ -59,14 +84,15 @@ class actionsController {
                     separaDados = separaDados.split(/[\s@,:/]/g);
                     console.log(separaDados)
                     
-                    if (i === 0) {
+                    if (separaDados[0] !== '' && separaDados[1] === 'ext-local') {
                         arrayExtensions.push({
                             exten: separaDados[0],
                             context: separaDados[1],
-                            type: separaDados[3],
-                            status: separaDados[6]
+                            type: separaDados[4],
+                            status: separaDados[7]
                         });
-                    } else {
+                    } 
+                    else if(separaDados[2] === 'ippbx-from-extension'){
                         arrayExtensions.push({
                             exten: separaDados[1],
                             context: separaDados[2],
@@ -74,15 +100,16 @@ class actionsController {
                             status: separaDados[7]
                         });
                     }
-
                 }
             } catch (error) {
                 return res.json(error)
             }
-            
+            if (arrayExtensions[0].exten === '0123456789') {
+                arrayExtensions.shift()
+            }
             console.log(arrayExtensions);
             // console.log(response)
-            return res.json(arrayExtensions)
+            return res.json(arrayExtensions.reverse())
         }, 100);
     }
 
@@ -111,10 +138,20 @@ class actionsController {
 
         data.map(exten => {
 
-            if (exten.exten) {
+            if (exten.exten && exten.context === "ippbx-from-extension") {
                 ami.action({
                     'action': 'ExtensionState',
                     'context': exten.context + 's',
+                    'exten': exten.exten,
+                    'actionid': '1',
+                }, function(err, ress) {
+                    console.log(ress)
+                    response.push(ress)
+                });
+            } else {
+                ami.action({
+                    'action': 'ExtensionState',
+                    'context': exten.context,
                     'exten': exten.exten,
                     'actionid': '1',
                 }, function(err, ress) {
