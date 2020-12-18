@@ -8,6 +8,7 @@ class actionsController {
         const ami = new amiI(port, IPPabx, user, password);
         const arrayExtensions = [];
         const response = [];
+        console.log('a')
 
         /**
          * Abrimos a conexão com o AMI e realizamos o comando core show hints para pegar todas as extensões locais
@@ -18,6 +19,7 @@ class actionsController {
             'command': 'core show hints',
             'actionid': '3',
         }, function(err, ress) {
+            console.log(ress, 'a')
             response.push(ress) 
         });
 
@@ -34,12 +36,12 @@ class actionsController {
             * "- xx" ou seja, tentamos encontrar uma barra, que após ela tenha um espaço em branco e em seguida qualquer
             * número de até 5 dígitos, para isso usamos a expressão match(/-\s[0-9]{0,5}/)[0], o retorno dessa procura é 
             * algo como "'- 10'", no caso de ter encontrado 10 ocorrências. Para limpar e ficarmos apenas com os números utilizamos
-            * a expressão match(/[0-9]{1,5}/). Depois colocamos essa informação dentro da constante "quantLinhas" e diminuimos 1 
-            * pois o array iniciará em 0. Lambrando que isso tudo é feito após transformar o retorno que vem em JSON para string
+            * a expressão match(/[0-9]{1,5}/). Depois colocamos essa informação dentro da constante "quantLinhas". 
+            * Lambrando que isso tudo é feito após transformar o retorno que vem em JSON para string
             * */       
                 let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
                 achaQuantidade = JSON.stringify(achaQuantidade).match(/[0-9]{1,5}/);
-                const quantLinhas = Number(achaQuantidade) -1;
+                const quantLinhas = Number(achaQuantidade);
             /**
              * Para limpar o conteudo e pegar somente as informações uteis a estratégia foi encontrar o local do "=-" na string e
              * adicionar mais 4 posições. A soma de 4 é para não pegar o "=-/n" e depois encontramos a expressão "--" e diminuimos 
@@ -47,13 +49,13 @@ class actionsController {
              * 
              * A entrada é algo como:
              * -= Registered Asterisk Dial Plan Hints =-  (PEGAMOS ESSE INDEX)
-             * 0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
-             * 4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0
-             * 4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0
-             * 399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0
-             * 600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0
-             * 401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0
-             * 400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0
+             * 0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0\n
+             * 4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0\n
+             * 4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0\n
+             * 399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0\n
+             * 600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0\n
+             * 401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0\n
+             * 400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0 n
              * 501@ippbx-from-extension: Zap/2                 State:Unavailable     Watchers  0
              * ----------------
              * - 8 hints registered
@@ -73,9 +75,13 @@ class actionsController {
 
                 let arrayFinal = JSON.stringify(response).substr(indexIni, indexFim)
 
-
                 console.log(arrayFinal ,quantLinhas)
-
+            
+                /**
+                 * Depois de limpar os dados, é feito um laço com referência a quantidade que pegamos 
+                 * anteriormente, separamos cada linha da string em um array, para isso usamos a função 
+                 * split(/\\n/g) "\n" seria a quebra de linha.
+                 */
                 let linha = [];
 
                 for (let i = 0; i < quantLinhas;i++) {

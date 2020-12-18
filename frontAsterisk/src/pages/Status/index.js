@@ -7,9 +7,8 @@ import IconTele from '../../assets/telefonista.svg'
 
 import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdSettingsPhone } from 'react-icons/md';
 
-let control = 'off';
-let findExten = 'off';
-
+let controlStartStop = true;
+let controlDisable = true;
 
 function Status({ history }) {
   const [finalExtension, setFinalExtension] = useState([]);
@@ -27,9 +26,19 @@ function Status({ history }) {
           password: history.location.state.password
         }
       });
-      setInitialExtension(response.data);
-      setFinalExtension(response.data);
 
+      if (JSON.stringify(response.data) !== "{}") {
+        controlDisable = false;
+
+        setFinalExtension(response.data);
+        setInitialExtension(response.data);
+
+      } else {
+        controlDisable = true;
+
+        alert('Erro ao carregar extensões');
+        setFinalExtension([]);
+      }
       
       const ap2 = axios.create({
         baseURL: 'http://10.1.43.11'
@@ -48,7 +57,6 @@ function Status({ history }) {
   ]);
 
   async function handleSubmit() {
-    findExten = 'on';
 
     const response = await api.get('/sipHints', {
       params: {
@@ -58,17 +66,26 @@ function Status({ history }) {
         password: history.location.state.password
       }
     });
+    if (JSON.stringify(response.data) !== "{}") {
+      controlDisable = false;
 
-    setFinalExtension(response.data);
+      setFinalExtension(response.data);
+      setInitialExtension(response.data);
+    } else {
+      controlDisable = true;
+
+      alert('Erro ao carregar extensões');
+      setFinalExtension([]);
+    }
   };
 
   async function handleStartStop() {
-    if (control === 'off') {
-      control = 'on';
+    if (controlStartStop === true) {
+      controlStartStop = false;
       reloadState();
       
     } else {
-      control = 'off';
+      controlStartStop = true;
 
       setTimeout(() => {
         setFinalExtension(initialExtension);
@@ -110,7 +127,7 @@ function Status({ history }) {
       
       setFinalExtension(response.data);
 
-      if (control === 'off') {
+      if (controlStartStop === true) {
         clearInterval(timer);
       }
     }, 4000);
@@ -153,11 +170,12 @@ function Status({ history }) {
               ))}
             </ul>
             <button class="bt1" type="button" onClick={handleSubmit}><MdRefresh size={30} color="#000"/></button>
-            <button type="button" onClick={handleStartStop} >
+            <button type="button" onClick={handleStartStop} 
+              disabled={controlDisable ? true:false}>
               {
-                control === "on" ? 
-                <MdPauseCircleOutline size={30} color="#000"/> : 
-                <MdPlayCircleOutline size={30} color="#000" />
+                controlStartStop ? 
+                <MdPlayCircleOutline size={30} color={controlDisable ? "#ddd" : "#000"}/> :
+                <MdPauseCircleOutline size={30} color="#000"/>
               }
             </button>
           </StatusExten>
