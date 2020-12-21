@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from  'axios';
 
 import api from '../../services/api';
 import { Container, Header, StatusExten, BoxStatus, InfoExten, InfoBox } from './styles';
@@ -13,6 +12,8 @@ let controlDisable = true;
 function Status({ history }) {
   const [finalExtension, setFinalExtension] = useState([]);
   const [initialExtension, setInitialExtension] = useState([]);
+  const [aditionalInfos, setAditionalInfos] = useState([]);
+  const mergeExtension = [];
 
   let timer;
   
@@ -29,23 +30,25 @@ function Status({ history }) {
 
       if (JSON.stringify(response.data) !== "{}") {
         controlDisable = false;
-
         setFinalExtension(response.data);
         setInitialExtension(response.data);
-
-      } else {
+      } 
+      else {
         controlDisable = true;
-
         alert('Erro ao carregar extensões');
         setFinalExtension([]);
       }
-      
-      const ap2 = axios.create({
-        baseURL: 'http://10.1.43.11'
-      });
 
-      const histo = await ap2.get('/config?module=cdr&mode=pagenavigation&action=page&js=1&start=56&end=67')
-      console.log(histo)
+      const response2 = await api.get('/sipPeers', {
+        params: {
+          IPPabx: history.location.state.IPPabx,
+          port: history.location.state.port,
+          user: history.location.state.user,
+          password: history.location.state.password
+        }
+      });
+      
+      setAditionalInfos(response2.data)
     }      
 
     loadAllExtension();
@@ -122,11 +125,30 @@ function Status({ history }) {
         } else if (re.status === '16') {
           re.status = 'Ramal em espera';
         }
+        mergeExtension.push(re);
         return response.data
       });
+      setFinalExtension(response.data)
+      // mergeExtension.map(mExt => {
+      //   finalExtension.map(fExt => {
+      //     aditionalInfos.map(aExt => {
+      //       if (fExt.exten === mExt.exten) {
+      //         mExt.type = fExt.type
+      //       }
+      //       if (mExt.exten === aExt.exten) {
+      //         console.log(fExt.exten, aExt.exten, fExt.exten === aExt.exten ? true : false)
+      //         mExt.host = aExt.host
+      //         mExt.port = aExt.portExten
+      //       }
+      //       return aExt
+      //     });
+      //     return fExt
+      //   });
+      //   return mExt
+      // });
       
-      setFinalExtension(response.data);
-
+      // setFinalExtension(mergeExtension);
+      // mergeExtension.push([]);
       if (controlStartStop === true) {
         clearInterval(timer);
       }
@@ -165,7 +187,10 @@ function Status({ history }) {
                 <BoxStatus key={fe.actionid} status={fe.status} >
                   <label>{fe.exten}</label>
                   <label>{fe.status}</label>
+                  <label>{fe.type}</label>
                   <label>{fe.host}</label>
+                  <label>{fe.port}</label>
+
                 </BoxStatus>
               ))}
             </ul>

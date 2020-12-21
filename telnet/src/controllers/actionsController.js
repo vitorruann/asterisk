@@ -3,12 +3,12 @@ let verify = 0;
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
 
+    /**ROTA PARA ENCONTRAR AS EXTENSION*/
     async actionHints(req, res) {
         const { IPPabx, port, user, password } = req.query;
         const ami = new amiI(port, IPPabx, user, password);
         const arrayExtensions = [];
         const response = [];
-        console.log('a')
 
         /**
          * Abrimos a conexão com o AMI e realizamos o comando core show hints para pegar todas as extensões locais
@@ -48,27 +48,15 @@ class actionsController {
              * 140 para retirar os caracteres que não precisamos (é tudo isso por que tem muito espaço em branco).
              * 
              * A entrada é algo como:
-             * -= Registered Asterisk Dial Plan Hints =-  (PEGAMOS ESSE INDEX)
+             * -= Registered Asterisk Dial Plan Hints =-  <-(PEGAMOS ESSE INDEX)
              * 0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0\n
              * 4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0\n
-             * 4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0\n
-             * 399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0\n
-             * 600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0\n
-             * 401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0\n
-             * 400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0 n
-             * 501@ippbx-from-extension: Zap/2                 State:Unavailable     Watchers  0
-             * ----------------
+             * ----------------  <-(e esse INDEX)
              * - 8 hints registered
              * 
              * Depois de limpar fica:
              * 0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
              * 4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0
-             * 4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0
-             * 399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0
-             * 600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0
-             * 401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0
-             * 400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0
-             * 501@ippbx-from-extension: Zap/2                 State:Unavailable     Watchers  0
              */
                 let indexIni = JSON.stringify(response).indexOf("=-") + 4
                 let indexFim = JSON.stringify(response).indexOf("--") - 140
@@ -78,9 +66,30 @@ class actionsController {
                 console.log(arrayFinal ,quantLinhas)
             
                 /**
-                 * Depois de limpar os dados, é feito um laço com referência a quantidade que pegamos 
+                 * Depois de limpar os dados, é feito um laço de repetição com referência a quantidade que pegamos 
                  * anteriormente, separamos cada linha da string em um array, para isso usamos a função 
-                 * split(/\\n/g) "\n" seria a quebra de linha.
+                 * split(/\\n/g) onde "\n" seria a quebra de linha. Armazenamos o retorno em um array chamado "linha"
+                 * 
+                 * Depois dentro de cada linha, retiramos os espaços a mais utilizando a operação replace(/\s(?=\s)/g, "")
+                 * onde "\s" representa um espaço e (?=\s) outros quaisquer quantidade de espaço depois do primeiro espaço,
+                 * e subistituimos isso por nada, representado por "".
+                 * 
+                 * Depois de tirar os espaços, separamos os dados de cada linha, a separação procura qualquer aparecimento de
+                 * "\s", "@", ",", ":" e "/".
+                 * 
+                 * A entrada dos dados nessa parte é algo como:
+                 * 4004@ippbx-from-extension: SIP/4004 State:Unavailable Watchers 0
+                 * 5050@ext-local : SIP/5050,CustomPrese State:Unavailable Presence:not_set Watchers 0
+                 * 
+                 * A saída NAS CIP'S ficam:
+                 * ['', '4004', 'ippbx-from-extension', '', 'SIP', '4004', 'State', 'Unavailable', 'Watchers', '0']
+                 * 
+                 * A saída NO ISSABEL fica:
+                 * ['5050', 'ext-local', '', '', 'SIP', '5050', 'CustomPrese', 'State', 'Unavailable', 'Presence', 'not_set', 'Watchers', '0']
+                 * 
+                 * Como temos situações diferente para cada produto, realizamos um if e else if para tratarmos dirente
+                 * quando for CIP ou ISSABEL. No caso do ISSABEL, os dados importantes são os que estão nas posições
+                 * 0, 1, 4 e 7. No caso das CIP's o importe são os dados 1, 2, 4 e 7
                  */
                 let linha = [];
 
@@ -101,7 +110,7 @@ class actionsController {
                     else if(separaDados[2] === 'ippbx-from-extension'){
                         arrayExtensions.push({
                             exten: separaDados[1],
-                            context: separaDados[2],
+                            context: separaDados[2] + 's',
                             type: separaDados[4],
                             status: separaDados[7]
                         });
@@ -110,6 +119,19 @@ class actionsController {
             } catch (error) {
                 return res.json(error)
             }
+
+            /**
+             * Ao final da tratativa temos o resultado:
+             * CIP's
+             * { exten: '4004', context: 'ippbx-from-extension', type: 'SIP', status: 'Idle'},
+             * 
+             * Issabel
+             * { exten: '5050', context: 'ext-local', type: 'SIP', status: 'State' }.
+             * 
+             * Porém, nas CIPs a primeira posição do array é um número padrão que não deve ser mostrado,
+             * então é feito um if para retirar a primeira posição, caso seja encontrado o número específico
+             * na primeira posição do array
+             */
             if (arrayExtensions[0].exten === '0123456789') {
                 arrayExtensions.shift()
             }
@@ -119,6 +141,8 @@ class actionsController {
         }, 100);
     }
 
+    //********************************************************************************************************************** */
+    /**ROTA PARA ENCONTRAR O STATUS DE CADA EXTENSION */
     async actionExtenStatus(req, res) {
         const { extension, IPPabx, port, user, password } = req.query;
         const data = [];
@@ -143,28 +167,15 @@ class actionsController {
         });
 
         data.map(exten => {
-
-            if (exten.exten && exten.context === "ippbx-from-extension") {
-                ami.action({
-                    'action': 'ExtensionState',
-                    'context': exten.context + 's',
-                    'exten': exten.exten,
-                    'actionid': '1',
-                }, function(err, ress) {
-                    console.log(ress)
-                    response.push(ress)
-                });
-            } else {
-                ami.action({
-                    'action': 'ExtensionState',
-                    'context': exten.context,
-                    'exten': exten.exten,
-                    'actionid': '1',
-                }, function(err, ress) {
-                    console.log(ress)
-                    response.push(ress)
-                });
-            }
+            ami.action({
+                'action': 'ExtensionState',
+                'context': exten.context,
+                'exten': exten.exten,
+                'actionid': '1',
+            }, function(err, ress) {
+                console.log(ress)
+                response.push(ress)
+            });
         });
 
         setTimeout(() => {
@@ -173,6 +184,8 @@ class actionsController {
         }, 300);
     }
 
+    //********************************************************************************************************************** */
+    /**ROTA PARA ENCONTRAR IP E PORTA DA EXTENSION (NÃO ESTÁ SENDO UTILIZADA NESTE MOMENTO)*/
     async actionSipPeers(req, res) {
         const { IPPabx, port, user, password } = req.query;
         console.log(req.query);
@@ -211,340 +224,3 @@ class actionsController {
 }
 
 export default new actionsController();
-
-//-------------------------------------------SIPPEERS-------------------------------------------
-/**
-action: sippeers
-
-Response: Success
-Message: Peer status list will follow
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: Juntor_403
-ChanObjectType: peer
-IPaddress: 10.1.43.12
-IPport: 5060
-Dynamic: no
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored
-RealtimeDevice: no
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: Juntor402
-ChanObjectType: peer
-IPaddress: 10.1.43.12
-IPport: 5060
-Dynamic: no
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored
-RealtimeDevice: no
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: Juntor
-ChanObjectType: peer
-IPaddress: 10.1.43.12
-IPport: 5060
-Dynamic: no
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored
-RealtimeDevice: no
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: 400
-ChanObjectType: peer
-IPaddress: 10.1.43.12
-IPport: 5060
-Dynamic: no
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored
-RealtimeDevice: no
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: Ramal_205
-ChanObjectType: peer
-IPaddress: -none-
-IPport: 5060
-Dynamic: yes
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored
-RealtimeDevice: no
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: Ramal204
-ChanObjectType: peer
-IPaddress: -none-
-IPport: 5060
-Dynamic: yes
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored
-RealtimeDevice: no
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: Ramal
-ChanObjectType: peer
-IPaddress: -none-
-IPport: 5060
-Dynamic: yes
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored
-RealtimeDevice: no
-
-Event: PeerEntry
-Channeltype: SIP
-ObjectName: 202
-ChanObjectType: peer
-IPaddress: 10.1.24.156
-IPport: 5060
-Dynamic: yes
-Natsupport: yes
-VideoSupport: yes
-ACL: no
-Status: Unmonitored | UNKNOWN | UNREACHABLE | OK (3 ms)
-RealtimeDevice: no
-
-Event: PeerlistComplete
-ListItems: 8
-
-*/
-
-//-------------------------------------------ISIP/SIP SHOW PEER-------------------------------------------
-/**
-action: sipshowpeer
-peer: 202
-
-Response: Success
-Channeltype: SIP
-ObjectName: 202
-ChanObjectType: peer
-SecretExist: Y
-MD5SecretExist: N
-Context: ippbx-from-extensions
-Language: pt_BR
-AMAflags: Unknown
-CID-CallingPres: Presentation Allowed, Not Screene
-Callgroup:
-Pickupgroup:
-VoiceMailbox: 202@ippbx-from-extension
-TransferMode: open
-LastMsgsSent: 0
-Call-limit: 100
-MaxCallBR: 384 kbps
-Dynamic: Y
-Callerid: "202" <202>
-RegExpire: 12153 seconds
-SIP-AuthInsecure: port,invite
-SIP-NatSupport: Always
-ACL: N
-SIP-CanReinvite: Y
-SIP-PromiscRedir: N
-SIP-UserPhone: N
-SIP-VideoSupport: Y
-SIP-Sess-Timers: Accept
-SIP-Sess-Refresh: uas
-SIP-Sess-Expires: 1800
-SIP-Sess-Min: 90
-SIP-DTMFmode: info
-SIPLastMsg: 0
-ToHost:
-Address-IP: 10.1.24.156
-Address-Port: 5060
-Default-addr-IP: 0.0.0.0
-Default-addr-port: 5060
-Default-Username: 202
-Codecs: 0x10c (ulaw|alaw|g729)
-CodecOrder: g729,alaw,ulaw
-Status: Unmonitored
-SIP-Useragent:
-Reg-Contact : sip:202@10.1.24.156:5060
-*/
-
-//-------------------------------------------EXTENSIONSTATE-------------------------------------------
-/**
-action: extensionstate
-context: ippbx-from-extension
-exten: 400
-
-Response: Success
-Message: Extension Status
-Exten: 400
-Context: ippbx-from-extension
-Hint:
-Status: -1 (Ramal não encontrado) | 0 (Ramal livre)| 1 (Ramal em uso)| 
-         2 (Ramal ocuapdo)| 4 (Ramal indisponível)| 8 (Ramal ringando)| 
-         16 (Ramal em espera)
-*/
-
-//-------------------------------------------CORE SHOW HINTS-------------------------------------------
-/**
-cip850*CLI> core show hints
-cip850*CLI>
--= Registered Asterisk Dial Plan Hints =-
-0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
-4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0
-4003@ippbx-from-extension: SIP/4003              State:Idle            Watchers  0
-399@ippbx-from-extension: SIP/399               State:Unavailable     Watchers  0
-600@ippbx-from-extension: Zap/1                 State:Unavailable     Watchers  0
-401@ippbx-from-extension: SIP/401               State:Unavailable     Watchers  0
-400@ippbx-from-extension: SIP/400               State:Idle            Watchers  0
-501@ippbx-from-extension: Zap/2                 State:Unavailable     Watchers  0
-----------------
-- 8 hints registered
-
-
-*/
-
-//-------------------------------------------COMPARAÇÃO-------------------------------------------
-/**
-Ramais      Juntores
-200         400
-201         401
-202         402
-203         403
-204
-205
-
-cip850*CLI> isip show peers
-Name/username              Host            Dyn Nat ACL Port     Status
-Juntor_403                 10.1.43.12           N      5060     Unmonitored
-Juntor402                  10.1.43.12           N      5060     Unmonitored
-Juntor/401                 10.1.43.12           N      5060     Unmonitored
-400                        10.1.43.12           N      5060     Unmonitored
-Ramal_205                  (Unspecified)    D   N      5060     Unmonitored
-Ramal204                   (Unspecified)    D   N      5060     Unmonitored
-Ramal                      (Unspecified)    D   N      5060     Unmonitored
-202/202                    10.1.24.156      D   N      5060     Unmonitored
-8 sip peers [Monitored: 0 online, 0 offline Unmonitored: 8 online, 0 offline]
-
-cip850*CLI> core show hints
-cip850*CLI>
--= Registered Asterisk Dial Plan Hints =-
-0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0
-205@ippbx-from-extension: SIP/Ramal_205         State:Unavailable     Watchers  0
-204@ippbx-from-extension: SIP/Ramal204          State:Unavailable     Watchers  0
-203@ippbx-from-extension: SIP/Ramal             State:Unavailable     Watchers  0
-202@ippbx-from-extension: SIP/202               State:Idle            Watchers  0
-201@ippbx-from-extension: Zap/4                 State:Idle            Watchers  0
-200@ippbx-from-extension: Zap/3                 State:Idle            Watchers  0
-----------------
-- 7 hints registered
-
-cip850*CLI> isip show peer 400
-  * Name       : 400
-  Context      : ippbx-from-trunks
-  ToHost       : 10.1.43.12
-  Addr->IP     : 10.1.43.12 Port 5060
-  Defaddr->IP  : 0.0.0.0 Port 5060
-  Def. Username:
-  Status       : Unmonitored
-  Useragent    :
-  Sess-Expires : 1800 secs
-
-cip850*CLI> isip show peer 202
-  * Name       : 202
-  Context      : ippbx-from-extensions
-  Mailbox      : 202@ippbx-from-extension
-  VM Extension : asterisk
-  Call limit   : 100
-  Callerid     : "202" <202>
-  Status       : Unmonitored
-  Useragent    :
-  Reg. Contact : sip:202@10.1.24.156:5060
-
-cip850*CLI> isip show peer Ramal_205
-cip850*CLI>
-
-  * Name       : Ramal_205
-  Context      : ippbx-from-extensions
-  Mailbox      : 205@ippbx-from-extension
-  Callerid     : "Ramal_205" <205>
-  Addr->IP     : (Unspecified) Port 5060
-  Defaddr->IP  : 0.0.0.0 Port 5060
-  Def. Username:
-  Status       : Unmonitored
-  Useragent    :
-  Reg. Contact : 
-
-*/
-
-/**
- *     async actionRegistered(req, res) {
-        const {allExtension, IPPabx, port, user, password } = req.query;
-        // console.log(req.query.allExtension);
-        const filterExtension = [];
-        const data = [];
-
-        const ami = new amiI(port, IPPabx, user, password);
-
-        // ami.keepConnected();
-
-        ami.on('managerevent', function(evt) {
-
-            if ((evt.response === 'Success' && evt.context === 'from-internal') || (evt.response === 'Success' && evt.context === 'ippbx-from-extensions')) {
-            // console.log(evt.callerid.toString().indexOf("<"));
-                console.log(evt.callerid)
-                filterExtension.push({
-                    exten: evt.objectname,
-                    callID: evt.callerid, 
-                }) 
-            }
-        });
-        
-        allExtension.map(ex =>{
-            ex = ex.toString().replace('exten', "").replace('"', "").replace('"', "").replace(':', "")
-            .replace('"', "").replace('"', "").replace('{', "").replace('}', "")
-            console.log(ex)
-            data.push(ex.match(/\S{1,20}/g)); 
-        });
-
-
-        data.map(exten => {
-            console.log(exten)
-            ami.action({
-                'action': 'SipShowPeer',
-                'Peer': exten,
-                'actionid': '3',
-            }, function(err, ress) {
-                console.log(ress.response);
-                if ((ress.response === 'Success' && ress.context === 'from-internal') || (ress.response === 'Success' && ress.context === 'ippbx-from-extensions')) {
-                    let ext = ress.callerid.match(/[0-9]{1,20}/g)
-                    console.log(ress.callerid)
-                    console.log(ext.length)
-                    let finalPosition = ext.length -1;
-                    filterExtension.push({
-                        exten: ext[finalPosition],
-                        callID: ress.callerid.match(/^"\S{1,20}"/g).toString().replace('"', "").replace('"', ""), 
-                    }) 
-                }
-                
-            });
-        });
-        
-        ami.connect();
-
-        setTimeout(() => {
-            console.log(filterExtension);
-            return res.json(filterExtension)
-        }, 300);
-    }
- */
