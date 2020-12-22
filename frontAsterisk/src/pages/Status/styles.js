@@ -70,7 +70,7 @@ export const StatusExten = styled(PerfectScrollbar)`
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-gap: 10px;
-    margin-top: 30px;
+    margin: 30px 58px 0px 58px;
     list-style: none;
   }
 
@@ -92,20 +92,27 @@ export const StatusExten = styled(PerfectScrollbar)`
     border-radius: 4px;
   }
 
-  
+  #Details {
+    display: none;
+    height: 0px;
+  }
+
+  .Status:hover #Details{
+    display: block;
+  }
 `;
 
 export const BoxStatus = styled.li`
   padding: 20px;
   border-radius: 4px;
   font-weight: bold;
-  color: ${(props) => props.status === 'Ramal indisponível' ? '#aaa' : '#000'};
+  color: ${(props) => props.status === 'Ramal indis.' ? '#aaa' : '#000'};
   background-color: ${
   (props) => (props.status === 'Ramal livre' ? '#00CC88' : '#777' &&
     props.status === "Ramal em uso" ? '#ff9d5f' : '#777' &&
     props.status === "Ramal ringando" ? '#00ccdd' : '#777' &&
     props.status === "Ramal em espera" ? '#fdfd96' : '#777' &&
-    props.status === "Ramal indisponível" ? '#ccc' : '#777')
+    props.status === "Ramal indis." ? '#ccc' : '#777')
   
   };
 
@@ -118,6 +125,25 @@ export const BoxStatus = styled.li`
     color: ${(props) => props.status === 'Ramal indisponível' ? '#aaa' : '#666' &&
     props.status === 'Ramal não encontrado' ? '#000' : '#666'};
   }
+`;
+
+export const BoxDetails = styled.div`
+  background: rgba(0, 0, 0, 0.3);
+  position: relative;
+  width: 110px;
+  top: calc(-10% - 50px);
+  left: calc(70%);
+  padding: 5px;
+  border-radius: 4px;
+  font-weight: bold;
+
+  label {
+    display: block;
+  }
+
+  // label > + 1{
+  //   display: ${(props) => props.typeExten === 'Zap' ? 'none' : 'block'}
+  // }
 `;
 
 export const InfoExten = styled(PerfectScrollbar)`

@@ -15,7 +15,7 @@ export default createGlobalStyle`
 }
 
 html, body, #root {
-  height: 100%;
+  height: calc(100% - 11.5px);
 }
 
 body {
