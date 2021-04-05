@@ -32,12 +32,13 @@ class actionsController {
                 console.log(response);
                 let separaDados;
             /** 
-            * Para achar a quantidade de extensiões que foram encontradas no comando core show hints, procuramos por
+            * Dentro o retorno do comando "core show hints" a linha: "- 10 hints registered" reresenta a quantidade 
+            * de extensões encontradas. Para achar essa linha e pegarmos a quantidade de extensões encontradas, procuramos por:
             * "- xx" ou seja, tentamos encontrar uma barra, que após ela tenha um espaço em branco e em seguida qualquer
             * número de até 5 dígitos, para isso usamos a expressão match(/-\s[0-9]{0,5}/)[0], o retorno dessa procura é 
-            * algo como "'- 10'", no caso de ter encontrado 10 ocorrências. Para limpar e ficarmos apenas com os números utilizamos
-            * a expressão match(/[0-9]{1,5}/). Depois colocamos essa informação dentro da constante "quantLinhas". 
-            * Lambrando que isso tudo é feito após transformar o retorno que vem em JSON para string
+            * algo como "'- 10'", no caso de ter encontrado 10 extensões. Para limpar este retorno e ficarmos apenas com 
+            * os números, utilizamos a expressão match(/[0-9]{1,5}/). Depois colocamos essa informação dentro da constante 
+            * "quantLinhas". Lambrando que isso tudo é feito após transformar o retorno que vem em JSON para string
             * */       
                 let achaQuantidade = JSON.stringify(response).match(/-\s[0-9]{0,5}/)[0];
                 achaQuantidade = JSON.stringify(achaQuantidade).match(/[0-9]{1,5}/);
@@ -48,10 +49,10 @@ class actionsController {
              * 140 para retirar os caracteres que não precisamos (é tudo isso por que tem muito espaço em branco).
              * 
              * A entrada é algo como:
-             * -= Registered Asterisk Dial Plan Hints =-  <-(PEGAMOS ESSE INDEX)
+             * -= Registered Asterisk Dial Plan Hints =-                 <-(PEGAMOS ESSE INDEXOF)
              * 0123456789@ippbx-from-extension: SIP/0123456789        State:Unavailable     Watchers  0\n
              * 4004@ippbx-from-extension: SIP/4004              State:Unavailable     Watchers  0\n
-             * ----------------  <-(e esse INDEX)
+             * ----------------                                          <-(E ESSE INDEXOF)
              * - 8 hints registered
              * 
              * Depois de limpar fica:
