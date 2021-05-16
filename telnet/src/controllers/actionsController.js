@@ -1,5 +1,6 @@
 import amiI from 'asterisk-manager';
 let verify = 0;
+import http from 'http';
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
 
@@ -221,6 +222,30 @@ class actionsController {
             console.log(allExtension);
             return res.json(allExtension)
         }, 100);
+    }
+
+    async hangUpCall(req, res) {
+        const {userPhone, passwordPhone, ipPhone} = req.query;
+
+        let response = null;
+        http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=OK`, function(resp) {
+            console.log(resp);
+            return res.json(resp.statusCode);
+
+        });
+        return res.json({mess: 'a'});
+    }
+
+    async call(req, res) {
+        const {numbToCall, userPhone, passwordPhone, ipPhone} = req.query;
+
+        const rer = http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=SPEAKER;${numbToCall};OK`, function(resp) {
+            console.log(resp.statusCode);
+            return res.json(resp.statusCode);
+
+        });
+        console.log(rer)
+        return res.json({mess: 'a'});
     }
 }
 

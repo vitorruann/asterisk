@@ -186,4 +186,52 @@ export const InfoBox = styled.li`
   }
 `;
 
+export const Phone = styled.div`
+    margin-top: 40px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px 0px 30px 0px;
+    border: 3px solid #ccc;
+    border-radius: 4px;
+
+    h1 {
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+
+    .display {
+      width: 240px;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      padding-bottom: 30px;
+      font-size: 20px;
+      font-weight: bold;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .keyPhone {
+      width: 80px;
+      height: 80px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      margin: 1px;
+    }
+
+    button {
+      margin: 2px;
+      width: 120px;
+      height: 50px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+    }
+`;
+
 

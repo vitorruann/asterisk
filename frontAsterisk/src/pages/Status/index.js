@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Form, Input } from '@rocketseat/unform';
 
 import api from '../../services/api';
-import { Container, Header, StatusExten, BoxStatus, InfoExten, InfoBox, BoxDetails } from './styles';
+import { Container, Header, StatusExten, BoxStatus, BoxDetails, Phone } from './styles';
 import IconTele from '../../assets/telefonista.svg'
 
 import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdSettingsPhone } from 'react-icons/md';
@@ -13,8 +14,13 @@ function Status({ history }) {
   const [finalExtension, setFinalExtension] = useState([]);
   const [initialExtension, setInitialExtension] = useState([]);
   const [aditionalInfos, setAditionalInfos] = useState([]);
+  const [numbFinal, setNumbFinal] = useState([]);
 
   let timer;
+
+  useEffect(() =>{
+    console.log(numbFinal, numbFinal.values)
+  },[])
 
   useEffect(() =>{
     function defaultFunc() {
@@ -131,6 +137,29 @@ function Status({ history }) {
     }, 4000);
   };
 
+  async function makeACall() {
+    //http://admin:admin@192.168.1.101/cgi-bin/ConfigManApp.com?key=SPEAKER;21060006;OK
+    const response = await api.get('/sipCall', {
+      params: {
+        numbToCall: numbFinal
+      }
+    });
+    console.log(response);
+    
+    setNumbFinal('');
+  }
+
+  function addNumbToCall(data) {
+    // console.log(data)
+
+    data = numbFinal + data;
+
+    setNumbFinal(data);
+    // console.log(numbFinal)
+  }
+  
+
+
 
   return (
     <Container class="container">
@@ -147,8 +176,42 @@ function Status({ history }) {
           <div class="Titulos">
             <MdSettingsPhone size={30} />
             <h5>Desenvolvimento futuro</h5>
-          </div>  
+          </div> 
 
+          <Phone>
+            <h1>Phone</h1>
+
+            <Form onSubmit={makeACall}>
+              <Input className='display' name="numbToCall" type="text" onChange={setNumbFinal} value={numbFinal.values}/>
+              <div>
+                <Input className='keyPhone' name="n1"type="button" value="1" onClick={() => addNumbToCall("1")}/>
+                <Input className='keyPhone' name="n2"type="button" value="2" onClick={() => addNumbToCall("2")}/>
+                <Input className='keyPhone' name="n3"type="button" value="3" onClick={() => addNumbToCall("3")}/>
+              </div>
+
+              <div>
+              <Input className='keyPhone' name="n4"type="button" value="4" onClick={() => addNumbToCall("4")}/>
+              <Input className='keyPhone' name="n5"type="button" value="5" onClick={() => addNumbToCall("5")}/>
+              <Input className='keyPhone' name="n6"type="button" value="6" onClick={() => addNumbToCall("6")}/>
+              </div>      
+
+              <div>
+                <Input className='keyPhone' name="n7"type="button" value="7" onClick={() => addNumbToCall("7")}/>
+                <Input className='keyPhone' name="n8"type="button" value="8" onClick={() => addNumbToCall("8")}/>
+                <Input className='keyPhone' name="n9"type="button" value="9" onClick={() => addNumbToCall("9")}/>
+              </div>        
+              
+              <div>
+                <Input className='keyPhone' name="n*"type="button" value="*" onClick={() => addNumbToCall('*')}/>
+                <Input className='keyPhone' name="n0"type="button" value="0" onClick={() => addNumbToCall("0")}/>
+                <Input className='keyPhone' name="n#"type="button" value="#" onClick={() => addNumbToCall('#')}/>
+              </div>
+
+              <button type="submit">Ligar</button>
+              <button type="submit">Desligar</button>
+
+            </Form>
+          </Phone>
 
         </div>
 
