@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input } from '@rocketseat/unform';
+import { io } from 'socket.io-client';
 
-import { Form, Input } from '@rocketseat/unform';
 import api from '../../services/api';
 import { Container, Header, StatusExten, BoxStatus, BoxDetails, Phone } from './styles';
 import IconTele from '../../assets/telefonista.svg'
@@ -11,16 +11,25 @@ import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdSettin
 let controlStartStop = true;
 let controlDisable = true;
 
+const socket = io('http://10.1.31.92:3335');
+console.log(socket);
+
 function Status({ history }) {
   const [finalExtension, setFinalExtension] = useState([]);
   const [initialExtension, setInitialExtension] = useState([]);
   const [aditionalInfos, setAditionalInfos] = useState([]);
   const [numbFinal, setNumbFinal] = useState([]);
+  const [incomingCall, setIncomingCall] = useState(null);
 
   let timer;
 
   useEffect(() =>{
     console.log(numbFinal, numbFinal.values)
+    socket.on('newCall', (num) => {
+      setIncomingCall(num);
+    })
+
+    console.log(incomingCall === 'noCall' ? true : false);
   },[])
 
   useEffect(() =>{
@@ -138,10 +147,42 @@ function Status({ history }) {
     }, 4000);
   };
 
+  async function hangUp() {
+    const response = await api.get('/sipHangUp', {
+      params: {
+        userPhone: 'admin',
+        passwordPhone: 'admin', 
+        ipPhone: '10.1.43.131',
+      }
+    });
+
+    setIncomingCall('inCall')
+    console.log(response);
+  };
+
+  async function hangOut() {
+    const response = await api.get('/sipHangOut', {
+      params: {
+        userPhone: 'admin',
+        passwordPhone: 'admin', 
+        ipPhone: '10.1.43.131',
+      }
+    });
+    console.log(incomingCall === 'noCall' ? true : false);
+    setIncomingCall(null);
+
+
+    console.log(response);
+  }
+  
+
   async function makeACall() {
     //http://admin:admin@192.168.1.101/cgi-bin/ConfigManApp.com?key=SPEAKER;21060006;OK
     const response = await api.get('/sipCall', {
       params: {
+        userPhone: 'admin',
+        passwordPhone: 'admin', 
+        ipPhone: '10.1.43.131',
         numbToCall: numbFinal
       }
     });
@@ -183,7 +224,7 @@ function Status({ history }) {
             <h1>Phone</h1>
 
             <Form onSubmit={makeACall}>
-              <Input className='display' name="numbToCall" type="text" onChange={setNumbFinal} value={numbFinal.values}/>
+              <Input className='display' name="numbToCall" type="text" onChange={setNumbFinal} value={numbFinal}/>
               <div>
                 <Input className='keyPhone' name="n1"type="button" value="1" onClick={() => addNumbToCall("1")}/>
                 <Input className='keyPhone' name="n2"type="button" value="2" onClick={() => addNumbToCall("2")}/>
@@ -208,8 +249,12 @@ function Status({ history }) {
                 <Input className='keyPhone' name="n#"type="button" value="#" onClick={() => addNumbToCall('#')}/>
               </div>
 
-              <button type="submit">Ligar</button>
-              <button type="submit">Desligar</button>
+              <button type="submit" >Ligar</button>
+              <button type="button" onClick={hangOut}>Desligar</button>
+
+              <div>
+                <MdPhone type="button" onClick={hangUp} size={35} color={incomingCall === null ? "#00CC88" : "#ff9d5f" && incomingCall === 'inCall' ? "#ff0000" : "#ff9d5f"}>Atender</MdPhone>
+              </div>
 
             </Form>
           </Phone>

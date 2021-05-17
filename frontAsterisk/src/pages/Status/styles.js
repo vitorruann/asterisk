@@ -195,6 +195,8 @@ export const Phone = styled.div`
     border: 3px solid #ccc;
     border-radius: 4px;
 
+
+
     h1 {
       color: #ccc;
       margin-bottom: 20px;
@@ -224,6 +226,8 @@ export const Phone = styled.div`
     }
 
     button {
+      background: ${(props) => props.callRecevid == null ? '#00ccdd' : '#c1c1'};
+
       margin: 2px;
       width: 120px;
       height: 50px;
