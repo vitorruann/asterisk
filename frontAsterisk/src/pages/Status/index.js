@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
+import { Form, Input } from '@rocketseat/unform';
 import api from '../../services/api';
-import { Container, Header, StatusExten, BoxStatus, InfoExten, InfoBox, BoxDetails } from './styles';
+import { Container, Header, StatusExten, BoxStatus, BoxDetails } from './styles';
 import IconTele from '../../assets/telefonista.svg'
 
 import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdSettingsPhone } from 'react-icons/md';
@@ -13,6 +14,8 @@ function Status({ history }) {
   const [finalExtension, setFinalExtension] = useState([]);
   const [initialExtension, setInitialExtension] = useState([]);
   const [aditionalInfos, setAditionalInfos] = useState([]);
+  const [numberFinal, setNumberFinal] = useState([]);
+
 
   let timer;
 
@@ -131,6 +134,26 @@ function Status({ history }) {
     }, 4000);
   };
 
+  async function atenderChamada() {
+    const response = await api.get('/tip');
+    console.log(response)
+  }
+
+  async function realizaLigacao(date) {
+    
+  }
+  const numberIni = []
+  async function addNumber(data) {
+    console.log(data)
+
+    data += numberFinal
+    console.log(data)
+
+    data = data.split('').reverse().join('')
+    // numberIni.push(data.split('').reverse().join(''))
+    setNumberFinal(data)
+  }
+
 
   return (
     <Container class="container">
@@ -148,7 +171,18 @@ function Status({ history }) {
             <MdSettingsPhone size={30} />
             <h5>Desenvolvimento futuro</h5>
           </div>  
+        
+        <button onClick={atenderChamada}>Atender Chamada</button>
 
+        <Form onSubmit={realizaLigacao}>
+          <Input name="n1" onClick={() => addNumber('1')} type="button" value="1"/>
+          <Input name="n2" onClick={() => addNumber('2')} type="button" value="2"/>  
+          <Input name="n3" onClick={() => addNumber('3')} type="button" value="3"/>  
+          <Input name="n4" onClick={() => addNumber('4')}type="button" value="4"/> 
+          <Input name="numberFinal" type="text" value={numberFinal}/>  
+
+          <button type="submit">Ligar</button>
+        </Form>
 
         </div>
 

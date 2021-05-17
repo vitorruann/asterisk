@@ -1,4 +1,7 @@
 import amiI from 'asterisk-manager';
+import http from 'http';
+import { pathToFileURL } from 'url';
+
 let verify = 0;
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
@@ -222,6 +225,25 @@ class actionsController {
             return res.json(allExtension)
         }, 100);
     }
+
+    async tipActions(req, res) {
+        const reqss = http.get('http://admin:admin@10.1.43.131/cgi-bin/ConfigManApp.com?key=OK', (resp) =>{
+            console.log(resp.statusCode);
+            return res.json(resp.statusCode);
+        });
+    }
+
+    async tipCall(req, res) {
+        const { numberToCall } = req.query;
+        
+        //http://admin:admin@192.168.1.101/cgi-bin/ConfigManApp.com?key=SPEAKER;21060006;OK
+
+        const call = http.get(`http://admin:admin@10.1.43.131/cgi-bin/ConfigManApp.com?key=SPEAKER;${numberToCall};OK`, (resp) =>{
+            console.log(resp.statusCode);
+            return res.json(resp.statusCode);
+        });
+    }
+    
 }
 
 export default new actionsController();
