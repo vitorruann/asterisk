@@ -1,6 +1,5 @@
 import amiI from 'asterisk-manager';
 import http from 'http';
-import { pathToFileURL } from 'url';
 
 let verify = 0;
 import http from 'http';
@@ -227,26 +226,6 @@ class actionsController {
         }, 100);
     }
 
-<<<<<<< HEAD
-    async tipActions(req, res) {
-        const reqss = http.get('http://admin:admin@10.1.43.131/cgi-bin/ConfigManApp.com?key=OK', (resp) =>{
-            console.log(resp.statusCode);
-            return res.json(resp.statusCode);
-        });
-    }
-
-    async tipCall(req, res) {
-        const { numberToCall } = req.query;
-        
-        //http://admin:admin@192.168.1.101/cgi-bin/ConfigManApp.com?key=SPEAKER;21060006;OK
-
-        const call = http.get(`http://admin:admin@10.1.43.131/cgi-bin/ConfigManApp.com?key=SPEAKER;${numberToCall};OK`, (resp) =>{
-            console.log(resp.statusCode);
-            return res.json(resp.statusCode);
-        });
-    }
-    
-=======
     async hangUpCall(req, res) {
         const {userPhone, passwordPhone, ipPhone} = req.query;
 
@@ -270,7 +249,6 @@ class actionsController {
         console.log(rer)
         return res.json({mess: 'a'});
     }
->>>>>>> fa5dbe86f4f14f29630505e6555d82e0dc0c1e5d
 }
 
 export default new actionsController();
