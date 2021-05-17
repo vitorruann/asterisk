@@ -3,6 +3,7 @@ import http from 'http';
 import { pathToFileURL } from 'url';
 
 let verify = 0;
+import http from 'http';
 // 5030, '10.1.43.12', 'admin', 'ippbx'
 class actionsController {
 
@@ -226,6 +227,7 @@ class actionsController {
         }, 100);
     }
 
+<<<<<<< HEAD
     async tipActions(req, res) {
         const reqss = http.get('http://admin:admin@10.1.43.131/cgi-bin/ConfigManApp.com?key=OK', (resp) =>{
             console.log(resp.statusCode);
@@ -244,6 +246,31 @@ class actionsController {
         });
     }
     
+=======
+    async hangUpCall(req, res) {
+        const {userPhone, passwordPhone, ipPhone} = req.query;
+
+        let response = null;
+        http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=OK`, function(resp) {
+            console.log(resp);
+            return res.json(resp.statusCode);
+
+        });
+        return res.json({mess: 'a'});
+    }
+
+    async call(req, res) {
+        const {numbToCall, userPhone, passwordPhone, ipPhone} = req.query;
+
+        const rer = http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=SPEAKER;${numbToCall};OK`, function(resp) {
+            console.log(resp.statusCode);
+            return res.json(resp.statusCode);
+
+        });
+        console.log(rer)
+        return res.json({mess: 'a'});
+    }
+>>>>>>> fa5dbe86f4f14f29630505e6555d82e0dc0c1e5d
 }
 
 export default new actionsController();
