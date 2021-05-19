@@ -226,44 +226,7 @@ class actionsController {
         }, 100);
     }
 
-    async hangUpCall(req, res) {
-        const {userPhone, passwordPhone, ipPhone} = req.query;
-        let responseHangUp = null;
 
-        http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=F_ACCEPT`, function(resp) {
-            responseHangUp = resp.statusCode;
-        });
-
-        setTimeout(() => {
-            return res.json(responseHangUp);
-        }, 100);
-    }
-
-    async hangOutCall(req, res) {
-        const {userPhone, passwordPhone, ipPhone} = req.query;
-        let responseHangOut = null;
-
-        http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=RELEASE`, function(resp) {
-            responseHangOut = resp.statusCode;
-        });
-
-        setTimeout(() => {
-            return res.json(responseHangOut);
-        }, 100);
-    }
-
-    async call(req, res) {
-        const {numbToCall, userPhone, passwordPhone, ipPhone} = req.query;
-        let responseCall = null;
-
-        const rer = http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=SPEAKER;${numbToCall};OK`, function(resp) {
-            responseCall = resp.statusCode;
-        });
-
-        setTimeout(() => {
-            return res.json(responseCall);
-        }, 100);
-    }
 }
 
 export default new actionsController();

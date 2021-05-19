@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input } from '@rocketseat/unform';
+import { Input } from '@rocketseat/unform';
 import { io } from 'socket.io-client';
 
 import api from '../../services/api';
 import { Container, Header, StatusExten, BoxStatus, BoxDetails, Phone } from './styles';
 import IconTele from '../../assets/telefonista.svg'
 
-import { MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdSettingsPhone } from 'react-icons/md';
+import { 
+  MdRefresh, MdPlayCircleOutline, MdPauseCircleOutline, MdPhone, MdCallEnd, MdSettingsPhone, MdKeyboardBackspace, 
+  MdExpandLess,
+  MdExpandMore,
+  MdChevronLeft,
+  MdChevronRight,
+  MdAddCircleOutline,
+  MdRemoveCircleOutline,
+} from 'react-icons/md';
 
 let controlStartStop = true;
 let controlDisable = true;
@@ -18,19 +26,24 @@ function Status({ history }) {
   const [finalExtension, setFinalExtension] = useState([]);
   const [initialExtension, setInitialExtension] = useState([]);
   const [aditionalInfos, setAditionalInfos] = useState([]);
-  const [numbFinal, setNumbFinal] = useState([]);
-  const [incomingCall, setIncomingCall] = useState(null);
+  const [numbFinal, setNumbFinal] = useState('');
+  const [typeCall, setTypeCall] = useState(null);
 
   let timer;
 
   useEffect(() =>{
-    console.log(numbFinal, numbFinal.values)
-    socket.on('newCall', (num) => {
-      setIncomingCall(num);
+    console.log(typeCall);
+
+    socket.on('statusCall', (data) => {
+      console.log(data)
+      setNumbFinal(data.numberID);
+      setTypeCall(data.typeCall);
     })
 
-    console.log(incomingCall === 'noCall' ? true : false);
-  },[])
+    if (typeCall === 'endCall') {
+      setNumbFinal('');
+    }
+  },[typeCall])
 
   useEffect(() =>{
     function defaultFunc() {
@@ -147,57 +160,82 @@ function Status({ history }) {
     }, 4000);
   };
 
-  async function hangUp() {
-    const response = await api.get('/sipHangUp', {
-      params: {
-        userPhone: 'admin',
-        passwordPhone: 'admin', 
-        ipPhone: '10.1.43.131',
-      }
-    });
-
-    setIncomingCall('inCall')
-    console.log(response);
-  };
-
   async function hangOut() {
-    const response = await api.get('/sipHangOut', {
+    const response = await api.get('/sipCall', {
       params: {
         userPhone: 'admin',
         passwordPhone: 'admin', 
         ipPhone: '10.1.43.131',
+        action: 'hangOut'
       }
     });
-    console.log(incomingCall === 'noCall' ? true : false);
-    setIncomingCall(null);
 
-
+    setNumbFinal('');
     console.log(response);
   }
   
 
   async function makeACall() {
     //http://admin:admin@192.168.1.101/cgi-bin/ConfigManApp.com?key=SPEAKER;21060006;OK
+
+    if (typeCall === 'incomingCall') {
+      const response = await api.get('/sipCall', {
+        params: {
+          userPhone: 'admin',
+          passwordPhone: 'admin', 
+          ipPhone: '10.1.43.131',
+          action: 'hangUp'
+        }
+      });
+      
+      console.log(response);
+    } else {
+
+      const response = await api.get('/sipCall', {
+        params: {
+          userPhone: 'admin',
+          passwordPhone: 'admin', 
+          ipPhone: '10.1.43.131',
+          numbToCall: numbFinal,
+          action: 'makeACall'
+        }
+      });
+
+      console.log(response);
+    }
+  }
+
+  function addNumbToCall(data) {
+    if (typeof(data) === 'object') {
+      if (data.nativeEvent.data) {
+        data = numbFinal + data.nativeEvent.data;
+      } else if(data.nativeEvent.inputType === 'deleteContentBackward') {
+        data = numbFinal.substring(numbFinal.length - 1, numbFinal.length);
+      }
+    } else {
+      data = numbFinal + data;
+    }
+    setNumbFinal(data);
+  }
+
+  function removeNumbToCall() {
+    const data = numbFinal.substring(0, numbFinal.length - 1);
+
+    setNumbFinal(data);
+  }
+
+  async function transferCall() {
     const response = await api.get('/sipCall', {
       params: {
         userPhone: 'admin',
         passwordPhone: 'admin', 
         ipPhone: '10.1.43.131',
-        numbToCall: numbFinal
+        numbToCall: numbFinal,
+        action: 'transferCall'
       }
     });
+
     console.log(response);
-    
-    setNumbFinal('');
-  }
-
-  function addNumbToCall(data) {
-    // console.log(data)
-
-    data = numbFinal + data;
-
-    setNumbFinal(data);
-    // console.log(numbFinal)
   }
   
 
@@ -214,50 +252,97 @@ function Status({ history }) {
 
       <div class="row">
         <div class="col-3">
-
           <div class="Titulos">
             <MdSettingsPhone size={30} />
             <h5>Desenvolvimento futuro</h5>
           </div> 
 
-          <Phone>
-            <h1>Phone</h1>
+          <div >
+            <Phone>
+              <h1>Phone</h1>
 
-            <Form onSubmit={makeACall}>
-              <Input className='display' name="numbToCall" type="text" onChange={setNumbFinal} value={numbFinal}/>
-              <div>
-                <Input className='keyPhone' name="n1"type="button" value="1" onClick={() => addNumbToCall("1")}/>
-                <Input className='keyPhone' name="n2"type="button" value="2" onClick={() => addNumbToCall("2")}/>
-                <Input className='keyPhone' name="n3"type="button" value="3" onClick={() => addNumbToCall("3")}/>
-              </div>
+                <Input className='display' name="numbToCall" type="text" onChange={addNumbToCall} value={numbFinal}/>
 
-              <div>
-              <Input className='keyPhone' name="n4"type="button" value="4" onClick={() => addNumbToCall("4")}/>
-              <Input className='keyPhone' name="n5"type="button" value="5" onClick={() => addNumbToCall("5")}/>
-              <Input className='keyPhone' name="n6"type="button" value="6" onClick={() => addNumbToCall("6")}/>
-              </div>      
+                <div>
+                  <button className='keyPhone' onClick={() => transferCall()}>Flash</button>
+                  <button className='keyPhone' onClick={() => transferCall()}>DND</button>
+                  <button className='keyPhone' onClick={() => removeNumbToCall()}><MdKeyboardBackspace size={22}></MdKeyboardBackspace></button>
+                </div>
 
-              <div>
-                <Input className='keyPhone' name="n7"type="button" value="7" onClick={() => addNumbToCall("7")}/>
-                <Input className='keyPhone' name="n8"type="button" value="8" onClick={() => addNumbToCall("8")}/>
-                <Input className='keyPhone' name="n9"type="button" value="9" onClick={() => addNumbToCall("9")}/>
-              </div>        
-              
-              <div>
-                <Input className='keyPhone' name="n*"type="button" value="*" onClick={() => addNumbToCall('*')}/>
-                <Input className='keyPhone' name="n0"type="button" value="0" onClick={() => addNumbToCall("0")}/>
-                <Input className='keyPhone' name="n#"type="button" value="#" onClick={() => addNumbToCall('#')}/>
-              </div>
+                <div className='divVol'>
+                  <div>
+                    <MdAddCircleOutline type="button" size={30} color='#00CC88'></MdAddCircleOutline>
+                  </div>
+                  <div>
+                    <button className='directions' onClick={() => transferCall()}><MdExpandLess size={25} color="#000"></MdExpandLess></button>
+                  </div>
+                  
+                  <div>
+                    <button className="keyVol" onClick={() => transferCall()}>L1</button>
+                  </div>
+                </div>
+                
+                <div>
+                  <button className='directions' onClick={() => transferCall()}><MdChevronLeft size={25} color="#000"></MdChevronLeft></button>
+                  <button className='directions' onClick={() => transferCall()}>OK</button>
+                  <button className='directions' onClick={() => transferCall()}><MdChevronRight size={25} color="#000"></MdChevronRight></button>
+                </div>
 
-              <button type="submit" >Ligar</button>
-              <button type="button" onClick={hangOut}>Desligar</button>
+                <div className='divVol'>
+                  <div>
+                    <MdRemoveCircleOutline type="button" size={30} color='#ff0000'></MdRemoveCircleOutline>
+                  </div>
 
-              <div>
-                <MdPhone type="button" onClick={hangUp} size={35} color={incomingCall === null ? "#00CC88" : "#ff9d5f" && incomingCall === 'inCall' ? "#ff0000" : "#ff9d5f"}>Atender</MdPhone>
-              </div>
+                  <div>
+                    <button className='directions' onClick={() => transferCall()}><MdExpandMore size={25} color="#000"></MdExpandMore></button>
+                  </div>
 
-            </Form>
-          </Phone>
+                  <div >
+                    <button className="keyVol" onClick={() => transferCall()}>L2</button>
+                  </div>
+                </div>
+
+                <div>
+                  <Input className='keyPhone' name="n1"type="button" value="1" onClick={() => addNumbToCall("1")}/>
+                  <Input className='keyPhone' name="n2"type="button" value="2" onClick={() => addNumbToCall("2")}/>
+                  <Input className='keyPhone' name="n3"type="button" value="3" onClick={() => addNumbToCall("3")}/>
+                </div>
+
+                <div>
+                <Input className='keyPhone' name="n4"type="button" value="4" onClick={() => addNumbToCall("4")}/>
+                <Input className='keyPhone' name="n5"type="button" value="5" onClick={() => addNumbToCall("5")}/>
+                <Input className='keyPhone' name="n6"type="button" value="6" onClick={() => addNumbToCall("6")}/>
+                </div>      
+
+                <div>
+                  <Input className='keyPhone' name="n7"type="button" value="7" onClick={() => addNumbToCall("7")}/>
+                  <Input className='keyPhone' name="n8"type="button" value="8" onClick={() => addNumbToCall("8")}/>
+                  <Input className='keyPhone' name="n9"type="button" value="9" onClick={() => addNumbToCall("9")}/>
+                </div>        
+                
+                <div>
+                  <Input className='keyPhone' name="n*"type="button" value="*" onClick={() => addNumbToCall('*')}/>
+                  <Input className='keyPhone' name="n0"type="button" value="0" onClick={() => addNumbToCall("0")}/>
+                  <Input className='keyPhone' name="n#"type="button" value="#" onClick={() => addNumbToCall('#')}/>
+                </div>
+
+                <div>
+                  <button onClick={() => transferCall()}>Mute</button>
+                  <button onClick={() => transferCall()}>RD</button>
+                </div>
+
+                <div>
+                  <button onClick={makeACall}>
+                    <MdPhone type="button"  size={35} color={typeCall === 'incomingCall' ? '#ff9d5f' : '#00CC88' && typeCall === 'endCall' ? '#00CC88': '#000' && typeCall === 'inCall' ? '#ff0000' : '#00CC88'}></MdPhone>
+                  </button>
+
+                  <button onClick={hangOut}>
+                    <MdCallEnd size={35} color='#ff0000'></MdCallEnd>
+                  </button>
+                </div>
+                
+            </Phone>
+          </div>
 
         </div>
 
@@ -304,6 +389,22 @@ function Status({ history }) {
 }
 
 export default Status;
+
+// async function hangUp() {
+//   const response = await api.get('/sipHangUp', {
+//     params: {
+//       userPhone: 'admin',
+//       passwordPhone: 'admin', 
+//       ipPhone: '10.1.43.131',
+//     }
+//   });
+
+//   setTypeCall('inCall')
+//   console.log(response);
+// };
+
+
+
 
 // switch (extension.status) {
 //   case '-1':

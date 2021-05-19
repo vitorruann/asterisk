@@ -9,10 +9,8 @@ routes.get('/extensionStatus', actionsController.actionExtenStatus);
 routes.get('/sipPeers', actionsController.actionSipPeers);
 routes.get('/sipHints', actionsController.actionHints);
 
-routes.get('/sipHangUp', actionsController.hangUpCall);
-routes.get('/sipHangOut', actionsController.hangOutCall);
-routes.get('/sipCall', actionsController.call);
 
-routes.get('/newCall', sipCallController.incomingCall);
+routes.get('/sipCall', sipCallController.call);
+routes.get('/call/:typeCall/', sipCallController.callStatus);
 
 export default routes;

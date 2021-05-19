@@ -57,7 +57,6 @@ export const Header = styled.div`
 
 export const StatusExten = styled(PerfectScrollbar)`
   overflow: hidden;
-  height: calc(100% - 140px);
   margin-right: 10px;
   background: transparent;
   padding-bottom:10px;
@@ -186,7 +185,8 @@ export const InfoBox = styled.li`
   }
 `;
 
-export const Phone = styled.div`
+export const Phone = styled(PerfectScrollbar)`
+    overflow: hidden;
     margin-top: 40px;
     align-items: center;
     justify-content: center;
@@ -198,7 +198,7 @@ export const Phone = styled.div`
 
 
     h1 {
-      color: #ccc;
+      font-weight: bold;
       margin-bottom: 20px;
     }
 
@@ -215,9 +215,39 @@ export const Phone = styled.div`
       text-align: center;
     }
 
+    .directions {
+      width: 30px;
+      height: 30px;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      border-radius: 50%;
+      margin: 1px;
+    }
+
+    .divVol {
+      display: flex;
+      
+      div:first-child {
+        width: 48%;
+      }
+      div:last-child {
+        width: 48%;
+      }
+    }
+
+
+
+    .keyVol {
+      margin-right: 10px;
+      width: 25px;
+      height: 25px;
+      font-size: 15px;
+    }
+
     .keyPhone {
       width: 80px;
-      height: 80px;
+      height: 45px;
       font-size: 20px;
       font-weight: bold;
       border: none;
@@ -226,11 +256,9 @@ export const Phone = styled.div`
     }
 
     button {
-      background: ${(props) => props.callRecevid == null ? '#00ccdd' : '#c1c1'};
-
       margin: 2px;
       width: 120px;
-      height: 50px;
+      height: 40px;
       font-size: 20px;
       font-weight: bold;
       border: none;
