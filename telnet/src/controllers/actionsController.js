@@ -182,6 +182,8 @@ class actionsController {
             });
         });
 
+        
+
         setTimeout(() => {
             ami.disconnect();
             return res.json(response)

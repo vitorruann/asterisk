@@ -55,6 +55,12 @@ export const Header = styled.div`
   }
 `;
 
+export const StatusRegister = styled.h1`
+  color: ${(props) => props.status === 'registered' ? '#00CC88' : '#000' &&
+  props.status === "notRegistered" ? '#ff6961' : '#000' };
+  background-color: #fff;
+`;
+
 export const StatusExten = styled(PerfectScrollbar)`
   overflow: hidden;
   margin-right: 10px;
@@ -265,5 +271,3 @@ export const Phone = styled(PerfectScrollbar)`
       border-radius: 4px;
     }
 `;
-
-

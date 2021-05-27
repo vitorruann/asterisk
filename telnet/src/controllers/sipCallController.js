@@ -50,6 +50,23 @@ class sipCallController {
         }, 2000);
     }
 
+    async infPhone(req, res) {
+        const {statusPhone} = req.params;
+        const modelPhone = JSON.stringify(req.headers).match(/[V][0-9]{0,5}/g).toString();
+
+        console.log(modelPhone, statusPhone);
+        
+        io.emit('modelPhone', {
+            modelPhone,
+            statusPhone: statusPhone
+        });
+
+        setTimeout(() => {
+            return res.json({mes: 'ok'})
+            
+        }, 100);
+    }
+
     async call(req, res) {
         const {numbToCall, userPhone, passwordPhone, ipPhone, action } = req.query;
         let statusCall = null;
@@ -99,28 +116,147 @@ class sipCallController {
                 return res.json({error: 'Algo de errado não está certo'})
         }
     }
+
+    async callFunctions(req, res) {
+        const {userPhone, passwordPhone, ipPhone, functionCall } = req.query;
+        let statusFunction = null;
+
+        switch (functionCall) {
+            case 'DNDON':
+            http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                statusFunction = resp.statusCode;
+            });
+    
+            setTimeout(() => {
+                return res.json(statusFunction);
+            }, 100);
+              break;
+
+            case 'DNDOFF':
+            http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                statusFunction = resp.statusCode;
+            });
+    
+            setTimeout(() => {
+                return res.json(statusFunction);
+            }, 100);
+                break;
+      
+            case 'VOLUME_UP':
+            http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                statusFunction = resp.statusCode;
+            });
+    
+            setTimeout(() => {
+                return res.json(statusFunction);
+            }, 100);
+              break;
+              
+            case 'UP':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;   
+      
+            case 'DSS1':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'LEFT':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'OK':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'RIGHT':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'VOLUME_DOWN':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'DOWN':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'DSS2':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'MUTE':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            case 'RD':
+                http.get(`http://${userPhone}:${passwordPhone}@${ipPhone}/cgi-bin/ConfigManApp.com?key=${functionCall}`, function(resp) {
+                    statusFunction = resp.statusCode;
+                });
+        
+                setTimeout(() => {
+                    return res.json(statusFunction);
+                }, 100);
+              break;
+      
+            default:
+              break;
+        }
+    }
 }
 
+
 export default new sipCallController();
-
-// const app = express();
-// const server = require('http').createServer(app);
-// const io = require('socket.io')(server, {
-//   cors: {
-//     origin: '*',
-//   }
-// });
-
-// let messages = []
-
-// io.on('connection', socket => {
-//   console.log(`Socket conectado: ${socket.id}`);
-//   socket.emit('id', socket.id);
-  
-//   socket.on('sendMessage', data => {
-//     messages.push(data);
-//     console.log(messages);
-//     socket.emit('receivedMessage', messages);
-
-//   });
-// });

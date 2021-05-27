@@ -3,7 +3,7 @@ import { Input } from '@rocketseat/unform';
 import { io } from 'socket.io-client';
 
 import api from '../../services/api';
-import { Container, Header, StatusExten, BoxStatus, BoxDetails, Phone } from './styles';
+import { Container, Header, StatusExten, BoxStatus, BoxDetails, Phone, StatusRegister } from './styles';
 import IconTele from '../../assets/telefonista.svg'
 
 import { 
@@ -14,6 +14,9 @@ import {
   MdChevronRight,
   MdAddCircleOutline,
   MdRemoveCircleOutline,
+  MdMicOff,
+  MdLoop,
+  MdBlock,
 } from 'react-icons/md';
 
 let controlStartStop = true;
@@ -28,21 +31,29 @@ function Status({ history }) {
   const [aditionalInfos, setAditionalInfos] = useState([]);
   const [numbFinal, setNumbFinal] = useState('');
   const [typeCall, setTypeCall] = useState(null);
+  const [infoPhone, setInfoPhone] = useState({modelPhone: 'Intelbras', statusPhone: ''});
+  const [DND, setDND] = useState('DNDON');
+
 
   let timer;
 
   useEffect(() =>{
     console.log(typeCall);
 
-    socket.on('statusCall', (data) => {
-      console.log(data)
-      setNumbFinal(data.numberID);
-      setTypeCall(data.typeCall);
+    socket.on('modelPhone', (data) => {
+      setInfoPhone(data);
     })
 
-    if (typeCall === 'endCall') {
-      setNumbFinal('');
-    }
+    socket.on('statusCall', (data) => {
+      console.log(data);
+      setNumbFinal(data.numberID);
+      setTypeCall(data.typeCall);
+      if (typeCall === 'endCall') {
+        setNumbFinal('');
+      }
+    });
+
+
   },[typeCall])
 
   useEffect(() =>{
@@ -160,22 +171,7 @@ function Status({ history }) {
     }, 4000);
   };
 
-  async function hangOut() {
-    const response = await api.get('/sipCall', {
-      params: {
-        userPhone: 'admin',
-        passwordPhone: 'admin', 
-        ipPhone: '10.1.43.131',
-        action: 'hangOut'
-      }
-    });
-
-    setNumbFinal('');
-    console.log(response);
-  }
-  
-
-  async function makeACall() {
+  async function callActions(transferCall) {
     //http://admin:admin@192.168.1.101/cgi-bin/ConfigManApp.com?key=SPEAKER;21060006;OK
 
     if (typeCall === 'incomingCall') {
@@ -189,7 +185,38 @@ function Status({ history }) {
       });
       
       console.log(response);
-    } else {
+    } 
+    else if(typeCall === 'inCall') {
+      if (transferCall) {
+        
+        const response = await api.get('/sipCall', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            numbToCall: numbFinal,
+            action: 'transferCall'
+          }
+        });
+    
+        setNumbFinal('');
+        console.log(response);
+      } 
+      else {
+        const response = await api.get('/sipCall', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            action: 'hangOut'
+          }
+        });
+    
+        setNumbFinal('');
+        console.log(response);
+      }
+    } 
+    else {
 
       const response = await api.get('/sipCall', {
         params: {
@@ -224,18 +251,187 @@ function Status({ history }) {
     setNumbFinal(data);
   }
 
-  async function transferCall() {
-    const response = await api.get('/sipCall', {
-      params: {
-        userPhone: 'admin',
-        passwordPhone: 'admin', 
-        ipPhone: '10.1.43.131',
-        numbToCall: numbFinal,
-        action: 'transferCall'
-      }
-    });
+  async function PhoneFunctions(functionCall) {
+    let response = '';
+    console.log(functionCall);
+    switch (functionCall) {
+      case 'DND':
+        if (DND === 'DNDON') {
+          setDND('DNDOFF')
 
-    console.log(response);
+          console.log(DND)
+          response = await api.get('/sipFunctions', {
+            params: {
+              userPhone: 'admin',
+              passwordPhone: 'admin', 
+              ipPhone: '10.1.43.131',
+              functionCall: 'DNDON',
+            }
+          });
+          console.log(response);
+        } 
+
+        else if('DNDOFF') {
+          setDND('DNDON')
+
+          response = await api.get('/sipFunctions', {
+            params: {
+              userPhone: 'admin',
+              passwordPhone: 'admin', 
+              ipPhone: '10.1.43.131',
+              functionCall: 'DNDOFF',
+            }
+          });
+          console.log(response);
+        }
+        break;
+
+      case 'VOLUME_UP':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);
+        break;
+        
+      case 'UP':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);
+        break;   
+
+      case 'DSS1':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);
+        break;
+
+      case 'LEFT':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);
+        break;
+
+      case 'OK':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);        
+        break;
+
+      case 'RIGHT':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);  
+        break;
+
+      case 'VOLUME_DOWN':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);  
+        break;
+
+      case 'DOWN':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);  
+        break;
+
+      case 'DSS2':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);  
+        break;
+
+      case 'MUTE':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);  
+        break;
+
+      case 'RD':
+        response = await api.get('/sipFunctions', {
+          params: {
+            userPhone: 'admin',
+            passwordPhone: 'admin', 
+            ipPhone: '10.1.43.131',
+            functionCall
+          }
+        });
+  
+        console.log(response);  
+        break;
+
+      default:
+        break;
+    }
   }
   
 
@@ -254,51 +450,51 @@ function Status({ history }) {
         <div class="col-3">
           <div class="Titulos">
             <MdSettingsPhone size={30} />
-            <h5>Desenvolvimento futuro</h5>
+            <h5>Terminais Linha V</h5>
           </div> 
 
           <div >
             <Phone>
-              <h1>Phone</h1>
+              <StatusRegister status={infoPhone.statusPhone}>{infoPhone.modelPhone}</StatusRegister>
 
                 <Input className='display' name="numbToCall" type="text" onChange={addNumbToCall} value={numbFinal}/>
 
                 <div>
-                  <button className='keyPhone' onClick={() => transferCall()}>Flash</button>
-                  <button className='keyPhone' onClick={() => transferCall()}>DND</button>
+                  <button className='keyPhone' onClick={() => callActions(true)}>Flash</button>
+                  <button className='keyPhone' onClick={() => PhoneFunctions('DND')}><MdBlock size={22} color={DND === 'DNDON' ? '#00CC88' : '#ff6961'}></MdBlock></button>
                   <button className='keyPhone' onClick={() => removeNumbToCall()}><MdKeyboardBackspace size={22}></MdKeyboardBackspace></button>
                 </div>
 
                 <div className='divVol'>
                   <div>
-                    <MdAddCircleOutline type="button" size={30} color='#00CC88'></MdAddCircleOutline>
+                    <MdAddCircleOutline type="button" onClick={() => PhoneFunctions('VOLUME_UP')} size={30} color='#00CC88'></MdAddCircleOutline>
                   </div>
                   <div>
-                    <button className='directions' onClick={() => transferCall()}><MdExpandLess size={25} color="#000"></MdExpandLess></button>
+                    <button className='directions' onClick={() => PhoneFunctions('UP')}><MdExpandLess size={25} color="#000"></MdExpandLess></button>
                   </div>
                   
                   <div>
-                    <button className="keyVol" onClick={() => transferCall()}>L1</button>
+                    <button className="keyVol" onClick={() => PhoneFunctions('DSS1')}>L1</button>
                   </div>
                 </div>
                 
                 <div>
-                  <button className='directions' onClick={() => transferCall()}><MdChevronLeft size={25} color="#000"></MdChevronLeft></button>
-                  <button className='directions' onClick={() => transferCall()}>OK</button>
-                  <button className='directions' onClick={() => transferCall()}><MdChevronRight size={25} color="#000"></MdChevronRight></button>
+                  <button className='directions' onClick={() => PhoneFunctions('LEFT')}><MdChevronLeft size={25} color="#000"></MdChevronLeft></button>
+                  <button className='directions' onClick={() => PhoneFunctions('OK')}>OK</button>
+                  <button className='directions' onClick={() => PhoneFunctions('RIGHT')}><MdChevronRight size={25} color="#000"></MdChevronRight></button>
                 </div>
 
                 <div className='divVol'>
                   <div>
-                    <MdRemoveCircleOutline type="button" size={30} color='#ff0000'></MdRemoveCircleOutline>
+                    <MdRemoveCircleOutline type="button" onClick={() => PhoneFunctions('VOLUME_DOWN')} size={30} color='#ff6961'></MdRemoveCircleOutline>
                   </div>
 
                   <div>
-                    <button className='directions' onClick={() => transferCall()}><MdExpandMore size={25} color="#000"></MdExpandMore></button>
+                    <button className='directions' onClick={() => PhoneFunctions('DOWN')}><MdExpandMore size={25} color="#000"></MdExpandMore></button>
                   </div>
 
                   <div >
-                    <button className="keyVol" onClick={() => transferCall()}>L2</button>
+                    <button className="keyVol" onClick={() => PhoneFunctions('DSS2')}>L2</button>
                   </div>
                 </div>
 
@@ -327,16 +523,16 @@ function Status({ history }) {
                 </div>
 
                 <div>
-                  <button onClick={() => transferCall()}>Mute</button>
-                  <button onClick={() => transferCall()}>RD</button>
+                  <button onClick={() => PhoneFunctions('MUTE')}><MdMicOff size={30} color="#ff6961"></MdMicOff></button>
+                  <button onClick={() => PhoneFunctions('RD')}><MdLoop size={30}></MdLoop></button>
                 </div>
 
                 <div>
-                  <button onClick={makeACall}>
+                  <button onClick={() => callActions(false)}>
                     <MdPhone type="button"  size={35} color={typeCall === 'incomingCall' ? '#ff9d5f' : '#00CC88' && typeCall === 'endCall' ? '#00CC88': '#000' && typeCall === 'inCall' ? '#ff0000' : '#00CC88'}></MdPhone>
                   </button>
 
-                  <button onClick={hangOut}>
+                  <button onClick={() => callActions(false)}>
                     <MdCallEnd size={35} color='#ff0000'></MdCallEnd>
                   </button>
                 </div>
@@ -389,140 +585,3 @@ function Status({ history }) {
 }
 
 export default Status;
-
-// async function hangUp() {
-//   const response = await api.get('/sipHangUp', {
-//     params: {
-//       userPhone: 'admin',
-//       passwordPhone: 'admin', 
-//       ipPhone: '10.1.43.131',
-//     }
-//   });
-
-//   setTypeCall('inCall')
-//   console.log(response);
-// };
-
-
-
-
-// switch (extension.status) {
-//   case '-1':
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal não encontrado'
-//     });
-//     break;
-
-//     case '0':
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal livre'
-//     });
-//     break;
-
-//     case '1':
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal em uso'
-//     });
-//     break;
-
-//     case '2':
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal ocuapdo'
-//     });
-//     break;
-    
-//     case '4':
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal em indisponível'
-//     });
-//     break;
-
-//     case '8':
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal em ringando'
-//     });
-//     break;
-
-//     case '16':
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal em espera'
-//     });
-//     break;
-
-//   default:
-//     setStatus({
-//       ramal: extension.exten,
-//       status: 'Ramal não encontrado 2'
-//     });
-//     break;
-//   }
-
-  // useEffect(() => {
-  //   async function loadExtensions() {
-  //     console.log(history.location.state);
-  //     const response = await api.get('/extensionStatus', {
-  //       params: {
-  //         extension: '5017',
-  //         IPPabx: '10.1.43.12',
-  //         port: 5030,
-  //         user: 'admin',
-  //         password: 'ippbx'
-  //       }
-  //     });
-
-  //     if (response.data.status === '-1') {
-  //       response.data.status = 'Ramal não encontrado';
-  //     }
-      
-  //     setExtension(response.data);
-  //   }
-
-  //   loadExtensions();
-  // },[]);
-
-
-  // timer = setInterval(async () => {
-  //   const response = await api.get('/extensionStatus', {
-  //     params: {
-  //       extension: data.extension,
-  //       IPPabx: history.location.state.IPPabx,
-  //       port: history.location.state.port,
-  //       user: history.location.state.user,
-  //       password: history.location.state.password
-  //     }
-  //   });
-
-  //   if (response.data.status === '-1') {
-  //     response.data.status = 'Ramal não encontrado';
-  //   } else if (response.data.status === '0') {
-  //     response.data.status = 'Ramal livre';
-  //   } else if (response.data.status === '1') {
-  //     response.data.status = 'Ramal em uso';
-  //   } else if (response.data.status === '2') {
-  //     response.data.status = 'Ramal ocuapdo';
-  //   } else if (response.data.status === '4') {
-  //     response.data.status = 'Ramal indisponível';
-  //   } else if (response.data.status === '8') {
-  //     response.data.status = 'Ramal ringando';
-  //   } else if (response.data.status === '16') {
-  //     response.data.status = 'Ramal em espera';
-  //   }
-
-  //   console.log('de novo')
-  //   setExtension(response.data);
-
-  //   console.log(control)
-
-
-  //   if (control === 'off') {
-  //     clearInterval(timer);
-  //   }
-
-  // }, 5000);
