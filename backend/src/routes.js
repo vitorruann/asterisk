@@ -16,6 +16,12 @@ routes.get('/sipFunctions', sipCallController.callFunctions);
 routes.get('/call/:typeCall/', sipCallController.callStatus);
 routes.get('/:statusPhone', sipCallController.infPhone);
 
+routes.get("/cgi-bin/ConfigManApp.com", (req, res) => {
+    console.log("Big acessou!", req)
+    const key = req.query.key
+    const code = req.query.code
+    return res.json({ key, code});
+  });
 
 export default routes;
 

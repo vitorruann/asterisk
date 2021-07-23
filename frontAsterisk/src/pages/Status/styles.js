@@ -4,7 +4,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 
 export const Container = styled.div`
   background: linear-gradient(-90deg, #aaa, #777);
-  height: 100%;
+  height: calc(100%);
 
   .Titulos {
     display: flex;
@@ -13,8 +13,9 @@ export const Container = styled.div`
     background-color: #ddd;
     border-radius: 4px;
     max-height: 50px;
-    overflow-x: hidden;
+    overflow: hidden;
   }
+
 
   h5 {
     padding-left: 10px;
@@ -25,6 +26,7 @@ export const Container = styled.div`
     margin-right: 0px;
     margin-left: 0px;
     height: calc(100% - 140px);
+    overflow: hidden;
   }
 `;
 
@@ -270,4 +272,15 @@ export const Phone = styled(PerfectScrollbar)`
       border: none;
       border-radius: 4px;
     }
+`;
+
+export const ContainerScroll = styled(PerfectScrollbar)`
+  display: flex;
+  height: calc(100% - 120px);
+
+  overflow: hidden;
+
+  .ContainerPhone {
+    height: calc(100%);
+  }
 `;

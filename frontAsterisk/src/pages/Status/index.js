@@ -3,7 +3,7 @@ import { Input } from '@rocketseat/unform';
 import { io } from 'socket.io-client';
 
 import api from '../../services/api';
-import { Container, Header, StatusExten, BoxStatus, BoxDetails, Phone, StatusRegister } from './styles';
+import { Container, ContainerScroll, Header, StatusExten, BoxStatus, BoxDetails, Phone, StatusRegister } from './styles';
 import IconTele from '../../assets/telefonista.svg'
 
 import { 
@@ -18,6 +18,7 @@ import {
   MdLoop,
   MdBlock,
 } from 'react-icons/md';
+import ScrollBar from 'react-perfect-scrollbar';
 
 let controlStartStop = true;
 let controlDisable = true;
@@ -446,12 +447,13 @@ function Status({ history }) {
           </div>
       </Header>
 
-      <div class="row">
-        <div class="col-3">
+      <ContainerScroll class="row">
+        <div class="col-3 ContainerPhone">
           <div class="Titulos">
             <MdSettingsPhone size={30} />
             <h5>Terminais Linha V</h5>
           </div> 
+
 
           <div >
             <Phone>
@@ -542,7 +544,7 @@ function Status({ history }) {
 
         </div>
 
-        <div class="col-6 col-sm-9 col-md-9">
+        <div class="col-6 col-sm-9 col-md-9 ContainerPhone">
           <div class="Titulos">
             <MdPhone size={30} color="#000" />
             <h5>Status dos ramais</h5>
@@ -579,7 +581,7 @@ function Status({ history }) {
             </button>
           </StatusExten>
         </div>
-      </div>
+      </ContainerScroll>
     </Container>
   );
 }
